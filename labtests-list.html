@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Tests - Medify</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .labtests-list-page {
+            padding-top: 8rem;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #0097a7;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+            color: #007a87;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333;
+            margin: 0 0 0.5rem 0;
+            line-height: 1.2;
+        }
+
+        .page-subtitle {
+            color: #666;
+            font-size: 1rem;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .tests-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .test-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .test-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            border-color: #0097a7;
+        }
+
+        .test-icon-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .test-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .test-icon i {
+            font-size: 2rem;
+            color: #0097a7;
+        }
+
+        .test-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin: 0 0 0.5rem 0;
+            line-height: 1.4;
+            text-align: center;
+            width: 100%;
+        }
+
+        .test-details {
+            font-size: 0.85rem;
+            color: #666;
+            margin: 0 0 1rem 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        .test-pricing {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 0 0 1rem 0;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .test-current-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .test-original-price {
+            font-size: 1rem;
+            color: #999;
+            text-decoration: line-through;
+        }
+
+        .test-discount {
+            font-size: 0.9rem;
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .test-add-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0097a7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .test-add-btn:hover {
+            background: #007a87;
+        }
+
+
+        @media (max-width: 768px) {
+            .tests-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-heartbeat"></i>
+                <a href="index.html" style="text-decoration: none; color: inherit;"><span>Medify</span></a>
+            </div>
+            
+            <div class="nav-address" id="delivery-address-selector">
+                <i class="fas fa-map-marker-alt"></i>
+                <div class="address-text">
+                    <div class="address-label">Delivery Address</div>
+                    <div class="address-value">
+                        <span id="selected-address">Select Address</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html#about" class="nav-link">About Us</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#cart" class="nav-link cart-icon" id="cart-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-badge" id="cart-count">0</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#login" class="nav-link login-btn" id="login-btn">
+                        <span id="login-text">Login</span>
+                        <i class="fas fa-user-circle" id="profile-icon" style="display: none; font-size: 1.5rem;"></i>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Lab Tests List Page -->
+    <div class="labtests-list-page">
+        <div class="container">
+            <div class="page-header">
+                <a href="labtest.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Lab Tests
+                </a>
+                <h1 class="page-title" id="category-title">Lab Tests</h1>
+                <p class="page-subtitle" id="category-subtitle">Browse available tests</p>
+            </div>
+
+            <div class="tests-grid" id="tests-grid">
+                <!-- Tests will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Medify</h3>
+                    <p>Your trusted healthcare partner</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="medicines.html">Order Medicines</a></li>
+                        <li><a href="medicines.html#prescription">Upload Prescription</a></li>
+                        <li><a href="consultation.html">Video Consultation</a></li>
+                        <li><a href="labtest.html">Lab Tests</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><i class="fas fa-phone"></i> +1 234 567 8900</li>
+                        <li><i class="fas fa-envelope"></i> support@medify.com</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Medical Street, Health City</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Medify. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Delivery Address Modal -->
+    <div id="delivery-address-modal" class="modal">
+        <div class="modal-content delivery-modal">
+            <div class="delivery-modal-header">
+                <button class="back-btn" id="close-delivery-modal">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2>Deliver to</h2>
+            </div>
+            <div class="delivery-options">
+                <button class="delivery-option-btn current-location-btn" id="use-current-location">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>Current Location</span>
+                </button>
+                <div class="or-separator">
+                    <span>OR</span>
+                </div>
+                <button class="delivery-option-btn choose-location-btn" id="choose-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Choose a different location</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content cart-modal">
+            <div class="cart-modal-header">
+                <h2>Shopping Cart</h2>
+                <span class="close-cart close">&times;</span>
+            </div>
+            <div class="cart-items" id="cart-items">
+                <div class="empty-cart">
+                    <i class="fas fa-shopping-cart"></i>
+                    <p>Your cart is empty</p>
+                </div>
+            </div>
+            <div class="cart-footer" id="cart-footer" style="display: none;">
+                <div class="cart-total">
+                    <strong>Total: ₹<span id="cart-total">0</span></strong>
+                </div>
+                <button class="btn btn-primary btn-block" id="checkout-btn">Proceed to Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Login to Your Account</h2>
+            <form class="login-form">
+                <div class="form-group">
+                    <label>Email / Phone Number</label>
+                    <input type="text" placeholder="Enter your email or phone">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+                <p class="signup-link">Don't have an account? <a href="#">Sign Up</a></p>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="labtests-data.js"></script>
+    <script>
+        // Get category from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const category = urlParams.get('category') || 'Full Body Checkup';
+
+        // Category titles mapping
+        const categoryTitles = {
+            'Full Body Checkup': 'Full Body Checkup Tests',
+            'Diabetes': 'Diabetes Tests',
+            'Women\'s Health': 'Women\'s Health Tests',
+            'Thyroid': 'Thyroid Tests',
+            'Vitamin': 'Vitamin Tests',
+            'Blood Studies': 'Blood Studies Tests',
+            'Heart': 'Heart Tests',
+            'Kidney': 'Kidney Tests',
+            'Liver': 'Liver Tests',
+            'Hairfall': 'Hairfall Tests',
+            'Fever': 'Fever Tests',
+            'Senior Citizen': 'Senior Citizen Health Tests'
+        };
+
+        // Update page title
+        document.getElementById('category-title').textContent = categoryTitles[category] || category + ' Tests';
+        document.getElementById('category-subtitle').textContent = `Browse all available tests for ${category}`;
+
+        // Display tests
+        function displayTests() {
+            const testsGrid = document.getElementById('tests-grid');
+            
+            // Wait for testsDatabase to load
+            if (typeof window.testsDatabase === 'undefined') {
+                setTimeout(displayTests, 100);
+                return;
+            }
+
+            const tests = window.testsDatabase[category] || [];
+            
+            if (tests.length === 0) {
+                testsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #666;">No tests available for this category.</div>';
+                return;
+            }
+
+            testsGrid.innerHTML = tests.map(test => `
+                <div class="test-card">
+                    <div class="test-icon-wrapper">
+                        <div class="test-icon">
+                            <i class="${test.icon}"></i>
+                        </div>
+                    </div>
+                    <h3 class="test-title">${test.name}</h3>
+                    <p class="test-details">${test.testsCount} Test${test.testsCount > 1 ? 's' : ''} Included</p>
+                    <div class="test-pricing">
+                        <span class="test-current-price">₹${test.price}</span>
+                        <span class="test-original-price">₹${test.originalPrice}</span>
+                        <span class="test-discount">${test.discount}% off</span>
+                    </div>
+                    <button class="test-add-btn" onclick="addTestToCart('${test.name}', ${test.price})">Add</button>
+                </div>
+            `).join('');
+        }
+
+        // Add test to cart function
+        function addTestToCart(testName, price) {
+            if (typeof window.addToCart === 'function') {
+                window.addToCart({
+                    id: Date.now(),
+                    name: testName,
+                    price: price,
+                    type: 'labtest'
+                });
+            } else {
+                alert(`Added ${testName} to cart!`);
+            }
+        }
+
+        // Make function globally accessible
+        window.addTestToCart = addTestToCart;
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            displayTests();
+        });
+    </script>
+</body>
+</html>
+

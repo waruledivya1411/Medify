@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Tests - Medify</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .labtest-page {
+            padding-top: 8rem;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        .labtest-section {
+            padding: 3rem 0;
+        }
+
+        .section-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-title-main {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin: 0;
+        }
+
+        .view-all-link {
+            color: #0097a7;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .view-all-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Doctor Created Health Checks Grid */
+        .health-checks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .health-check-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            text-align: center;
+        }
+
+        .health-check-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .health-check-icon-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .health-check-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .health-check-icon i {
+            font-size: 2.5rem;
+            color: #0097a7;
+        }
+
+        .offer-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 28px;
+            height: 28px;
+            background: #ff9800;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .health-check-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        /* Top Booked Tests Carousel */
+        .tests-carousel-wrapper {
+            position: relative;
+        }
+
+        .tests-carousel {
+            display: flex;
+            gap: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tests-carousel::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .tests-carousel::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 10px;
+        }
+
+        .tests-carousel::-webkit-scrollbar-thumb {
+            background: #0097a7;
+            border-radius: 10px;
+        }
+
+        .test-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            min-width: 280px;
+            flex-shrink: 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .test-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .test-icon-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .test-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .test-icon i {
+            font-size: 2rem;
+            color: #0097a7;
+        }
+
+        .test-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .test-details {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .test-pricing {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .test-current-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .test-original-price {
+            font-size: 1rem;
+            color: #999;
+            text-decoration: line-through;
+        }
+
+        .test-discount {
+            font-size: 0.9rem;
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .test-add-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0097a7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .test-add-btn:hover {
+            background: #007a87;
+        }
+
+        .carousel-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: background 0.2s;
+        }
+
+        .carousel-nav-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .carousel-nav-btn.prev {
+            left: -20px;
+        }
+
+        .carousel-nav-btn.next {
+            right: -20px;
+        }
+
+        .carousel-nav-btn i {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .health-checks-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 1rem;
+            }
+
+            .health-check-card {
+                padding: 1rem;
+            }
+
+            .test-card {
+                min-width: 260px;
+            }
+
+            .carousel-nav-btn {
+                display: none;
+            }
+
+            .section-header-flex {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-heartbeat"></i>
+                <a href="index.html" style="text-decoration: none; color: inherit;"><span>Medify</span></a>
+            </div>
+            
+            <div class="nav-address" id="delivery-address-selector">
+                <i class="fas fa-map-marker-alt"></i>
+                <div class="address-text">
+                    <div class="address-label">Delivery Address</div>
+                    <div class="address-value">
+                        <span id="selected-address">Select Address</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="index.html#about" class="nav-link">About Us</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#cart" class="nav-link cart-icon" id="cart-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-badge" id="cart-count">0</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#login" class="nav-link login-btn" id="login-btn">
+                        <span id="login-text">Login</span>
+                        <i class="fas fa-user-circle" id="profile-icon" style="display: none; font-size: 1.5rem;"></i>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Lab Test Page -->
+    <div class="labtest-page">
+        <div class="container">
+            <!-- Doctor Created Health Checks Section -->
+            <section class="labtest-section">
+                <div class="section-header-flex">
+                    <h2 class="section-title-main">Doctor Created Health Checks (29)</h2>
+                    <a href="#" class="view-all-link">View All</a>
+                </div>
+                
+                <div class="health-checks-grid">
+                    <a href="labtests-list.html?category=Full Body Checkup" style="text-decoration: none; color: inherit;">
+                        <div class="health-check-card">
+                            <div class="health-check-icon-wrapper">
+                                <div class="health-check-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="offer-badge">%</div>
+                            </div>
+                            <p class="health-check-name">Full Body Checkup</p>
+                        </div>
+                    </a>
+                    
+                    <a href="labtests-list.html?category=Diabetes" style="text-decoration: none; color: inherit;">
+                        <div class="health-check-card">
+                            <div class="health-check-icon-wrapper">
+                                <div class="health-check-icon">
+                                    <i class="fas fa-tint"></i>
+                                </div>
+                                <div class="offer-badge">%</div>
+                            </div>
+                            <p class="health-check-name">Diabetes</p>
+                        </div>
+                    </a>
+                    
+                    <a href="labtests-list.html?category=Women's Health" style="text-decoration: none; color: inherit;">
+                        <div class="health-check-card">
+                            <div class="health-check-icon-wrapper">
+                                <div class="health-check-icon">
+                                    <i class="fas fa-venus"></i>
+                                </div>
+                                <div class="offer-badge">%</div>
+                            </div>
+                            <p class="health-check-name">Women's Health</p>
+                        </div>
+                    </a>
+                    
+                    <a href="labtests-list.html?category=Thyroid" style="text-decoration: none; color: inherit;">
+                        <div class="health-check-card">
+                            <div class="health-check-icon-wrapper">
+                                <div class="health-check-icon">
+                                    <i class="fas fa-seedling"></i>
+                                </div>
+                                <div class="offer-badge">%</div>
+                            </div>
+                            <p class="health-check-name">Thyroid</p>
+                        </div>
+                    </a>
+                    
+                    <a href="labtests-list.html?category=Vitamin" style="text-decoration: none; color: inherit;">
+                        <div class="health-check-card">
+                            <div class="health-check-icon-wrapper">
+                                <div class="health-check-icon">
+                                    <i class="fas fa-pills"></i>
+                                </div>
+                                <div class="offer-badge">%</div>
+                            </div>
+                            <p class="health-check-name">Vitamin</p>
+                        </div>
+                    </a>
+                    
+                    <a href="labtests-list.html?category=Blood Studies" style="text-decoration: none; color: inherit;">
+                        <div class="health-check-card">
+                            <div class="health-check-icon-wrapper">
+                                <div class="health-check-icon">
+                                    <i class="fas fa-vial"></i>
+                                </div>
+                                <div class="offer-badge">%</div>
+                            </div>
+                            <p class="health-check-name">Blood Studies</p>
+                        </div>
+                    </a>
+                    
+                    <a href="labtests-list.html?category=Heart" style="text-decoration: none; color: inherit;">
+                        <div class="health-check-card">
+                            <div class="health-check-icon-wrapper">
+                                <div class="health-check-icon">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div class="offer-badge">%</div>
+                            </div>
+                            <p class="health-check-name">Heart</p>
+                        </div>
+                    </a>
+                    
+                    <a href="labtests-list.html?category=Kidney" style="text-decoration: none; color: inherit;">
+                        <div class="health-check-card">
+                            <div class="health-check-icon-wrapper">
+                                <div class="health-check-icon">
+                                    <i class="fas fa-stethoscope"></i>
+                                </div>
+                                <div class="offer-badge">%</div>
+                            </div>
+                            <p class="health-check-name">Kidney</p>
+                        </div>
+                    </a>
+                    
+                    <a href="labtests-list.html?category=Liver" style="text-decoration: none; color: inherit;">
+                        <div class="health-check-card">
+                            <div class="health-check-icon-wrapper">
+                                <div class="health-check-icon">
+                                    <i class="fas fa-prescription-bottle"></i>
+                                </div>
+                                <div class="offer-badge">%</div>
+                            </div>
+                            <p class="health-check-name">Liver</p>
+                        </div>
+                    </a>
+                    
+                    <a href="labtests-list.html?category=Hairfall" style="text-decoration: none; color: inherit;">
+                        <div class="health-check-card">
+                            <div class="health-check-icon-wrapper">
+                                <div class="health-check-icon">
+                                    <i class="fas fa-cut"></i>
+                                </div>
+                                <div class="offer-badge">%</div>
+                            </div>
+                            <p class="health-check-name">Hairfall</p>
+                        </div>
+                    </a>
+                    
+                    <a href="labtests-list.html?category=Fever" style="text-decoration: none; color: inherit;">
+                        <div class="health-check-card">
+                            <div class="health-check-icon-wrapper">
+                                <div class="health-check-icon">
+                                    <i class="fas fa-thermometer-half"></i>
+                                </div>
+                                <div class="offer-badge">%</div>
+                            </div>
+                            <p class="health-check-name">Fever</p>
+                        </div>
+                    </a>
+                    
+                    <a href="labtests-list.html?category=Senior Citizen" style="text-decoration: none; color: inherit;">
+                        <div class="health-check-card">
+                            <div class="health-check-icon-wrapper">
+                                <div class="health-check-icon">
+                                    <i class="fas fa-wheelchair"></i>
+                                </div>
+                                <div class="offer-badge">%</div>
+                            </div>
+                            <p class="health-check-name">Senior Citizen</p>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Top Booked Tests Section -->
+            <section class="labtest-section">
+                <div class="section-header-flex">
+                    <h2 class="section-title-main">Top Booked Tests (43)</h2>
+                    <a href="#" class="view-all-link">View All</a>
+                </div>
+                
+                <div class="tests-carousel-wrapper">
+                    <div class="tests-carousel" id="tests-carousel">
+                        <div class="test-card">
+                            <div class="test-icon-wrapper">
+                                <div class="test-icon">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                            </div>
+                            <h3 class="test-title">CBC Test (Complete Blood Count)</h3>
+                            <p class="test-details">30 Tests Included</p>
+                            <div class="test-pricing">
+                                <span class="test-current-price">₹398</span>
+                                <span class="test-original-price">₹995</span>
+                                <span class="test-discount">60% off</span>
+                            </div>
+                            <button class="test-add-btn">Add</button>
+                        </div>
+                        
+                        <div class="test-card">
+                            <div class="test-icon-wrapper">
+                                <div class="test-icon">
+                                    <i class="fas fa-tint"></i>
+                                </div>
+                            </div>
+                            <h3 class="test-title">HbA1c Test (Hemoglobin A1c)</h3>
+                            <p class="test-details">3 Tests Included</p>
+                            <div class="test-pricing">
+                                <span class="test-current-price">₹629</span>
+                                <span class="test-original-price">₹1572</span>
+                                <span class="test-discount">60% off</span>
+                            </div>
+                            <button class="test-add-btn">Add</button>
+                        </div>
+                        
+                        <div class="test-card">
+                            <div class="test-icon-wrapper">
+                                <div class="test-icon">
+                                    <i class="fas fa-tint"></i>
+                                </div>
+                            </div>
+                            <h3 class="test-title">FBS (Fasting Blood Sugar) Test</h3>
+                            <p class="test-details">1 Test Included</p>
+                            <div class="test-pricing">
+                                <span class="test-current-price">₹100</span>
+                                <span class="test-original-price">₹250</span>
+                                <span class="test-discount">60% off</span>
+                            </div>
+                            <button class="test-add-btn">Add</button>
+                        </div>
+                        
+                        <div class="test-card">
+                            <div class="test-icon-wrapper">
+                                <div class="test-icon">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                            </div>
+                            <h3 class="test-title">Lipid Profile Test</h3>
+                            <p class="test-details">8 Tests Included</p>
+                            <div class="test-pricing">
+                                <span class="test-current-price">₹800</span>
+                                <span class="test-original-price">₹2000</span>
+                                <span class="test-discount">60% off</span>
+                            </div>
+                            <button class="test-add-btn">Add</button>
+                        </div>
+                        
+                        <div class="test-card">
+                            <div class="test-icon-wrapper">
+                                <div class="test-icon">
+                                    <i class="fas fa-vial"></i>
+                                </div>
+                            </div>
+                            <h3 class="test-title">Thyroid Profile Test</h3>
+                            <p class="test-details">3 Tests Included</p>
+                            <div class="test-pricing">
+                                <span class="test-current-price">₹450</span>
+                                <span class="test-original-price">₹1125</span>
+                                <span class="test-discount">60% off</span>
+                            </div>
+                            <button class="test-add-btn">Add</button>
+                        </div>
+                        
+                        <div class="test-card">
+                            <div class="test-icon-wrapper">
+                                <div class="test-icon">
+                                    <i class="fas fa-lungs"></i>
+                                </div>
+                            </div>
+                            <h3 class="test-title">Liver Function Test</h3>
+                            <p class="test-details">10 Tests Included</p>
+                            <div class="test-pricing">
+                                <span class="test-current-price">₹550</span>
+                                <span class="test-original-price">₹1375</span>
+                                <span class="test-discount">60% off</span>
+                            </div>
+                            <button class="test-add-btn">Add</button>
+                        </div>
+                    </div>
+                    <button class="carousel-nav-btn next" id="carousel-next">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Medify</h3>
+                    <p>Your trusted healthcare partner</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="medicines.html">Order Medicines</a></li>
+                        <li><a href="medicines.html#prescription">Upload Prescription</a></li>
+                        <li><a href="consultation.html">Video Consultation</a></li>
+                        <li><a href="labtest.html">Lab Tests</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><i class="fas fa-phone"></i> +1 234 567 8900</li>
+                        <li><i class="fas fa-envelope"></i> support@medify.com</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Medical Street, Health City</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Medify. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Delivery Address Modal -->
+    <div id="delivery-address-modal" class="modal">
+        <div class="modal-content delivery-modal">
+            <div class="delivery-modal-header">
+                <button class="back-btn" id="close-delivery-modal">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2>Deliver to</h2>
+            </div>
+            <div class="delivery-options">
+                <button class="delivery-option-btn current-location-btn" id="use-current-location">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>Current Location</span>
+                </button>
+                <div class="or-separator">
+                    <span>OR</span>
+                </div>
+                <button class="delivery-option-btn choose-location-btn" id="choose-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Choose a different location</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content cart-modal">
+            <div class="cart-modal-header">
+                <h2>Shopping Cart</h2>
+                <span class="close-cart close">&times;</span>
+            </div>
+            <div class="cart-items" id="cart-items">
+                <div class="empty-cart">
+                    <i class="fas fa-shopping-cart"></i>
+                    <p>Your cart is empty</p>
+                </div>
+            </div>
+            <div class="cart-footer" id="cart-footer" style="display: none;">
+                <div class="cart-total">
+                    <strong>Total: ₹<span id="cart-total">0</span></strong>
+                </div>
+                <button class="btn btn-primary btn-block" id="checkout-btn">Proceed to Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Login to Your Account</h2>
+            <form class="login-form">
+                <div class="form-group">
+                    <label>Email / Phone Number</label>
+                    <input type="text" placeholder="Enter your email or phone">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+                <p class="signup-link">Don't have an account? <a href="#">Sign Up</a></p>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Carousel navigation
+        const carousel = document.getElementById('tests-carousel');
+        const nextBtn = document.getElementById('carousel-next');
+        
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                carousel.scrollBy({ left: 300, behavior: 'smooth' });
+            });
+        }
+    </script>
+</body>
+</html>
+
