@@ -22,25 +22,34 @@ const loginBtn = document.querySelector('.login-btn');
 const modal = document.getElementById('login-modal');
 const closeBtn = document.querySelector('.close');
 
-if (loginBtn) {
+if (loginBtn && modal) {
     loginBtn.addEventListener('click', (e) => {
         e.preventDefault();
         modal.style.display = 'block';
     });
 }
 
-if (closeBtn) {
+if (closeBtn && modal) {
     closeBtn.addEventListener('click', () => {
         modal.style.display = 'none';
     });
 }
 
-// Close modal when clicking outside
+// Close modal when clicking outside (only for login modal)
 window.addEventListener('click', (e) => {
-    if (e.target === modal) {
+    if (modal && e.target === modal) {
         modal.style.display = 'none';
     }
 });
+
+// Open login modal when URL has #login (e.g. redirect from checkout)
+function openLoginModalIfHash() {
+    if (window.location.hash === '#login' && modal) {
+        modal.style.display = 'block';
+    }
+}
+openLoginModalIfHash();
+window.addEventListener('hashchange', openLoginModalIfHash);
 
 // Delivery Address Modal
 const deliveryAddressSelector = document.getElementById('delivery-address-selector');
@@ -189,6 +198,7 @@ function updateCartCount() {
 
 // Update cart display
 function updateCartDisplay() {
+    if (!cartItemsContainer) return;
     if (cart.length === 0) {
         cartItemsContainer.innerHTML = `
             <div class="empty-cart">
@@ -196,7 +206,7 @@ function updateCartDisplay() {
                 <p>Your cart is empty</p>
             </div>
         `;
-        cartFooter.style.display = 'none';
+        if (cartFooter) cartFooter.style.display = 'none';
     } else {
         cartItemsContainer.innerHTML = cart.map((item, index) => `
             <div class="cart-item">
@@ -215,8 +225,8 @@ function updateCartDisplay() {
         `).join('');
 
         const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        cartTotal.textContent = total;
-        cartFooter.style.display = 'block';
+        if (cartTotal) cartTotal.textContent = total;
+        if (cartFooter) cartFooter.style.display = 'block';
     }
 }
 
@@ -275,6 +285,7 @@ window.doctorsDatabase = {
         { id: 106, name: "Dr. Swati Joshi", specialty: "General Physician", rating: 4.6, experience: 7, experienceText: "7 YEARS", credentials: "MBBS, MD (Internal Medicine)", location: "Ahmedabad", clinic: "Medify Clinic - Gujarat, Ahmedabad", price: 370, best: false, onlineAvailable: true, hospitalVisit: false, languages: ["English", "Hindi"] }
     ],
     "Cardiology": [
+        { id: 5000, name: "Dr. Test Doctor", specialty: "Cardiologist", rating: 4.9, experience: 12, experienceText: "12 YEARS", credentials: "MBBS, MD, DM (Cardiology)", location: "Mumbai", clinic: "Medify Clinic - Maharashtra, Mumbai", price: 750, best: true, onlineAvailable: true, hospitalVisit: true, languages: ["English", "Hindi"], email: "doctor@medify.com" },
         { id: 5, name: "Dr. Sanjay Mehta", specialty: "Cardiologist", rating: 4.9, experience: 20, experienceText: "20 YEARS", credentials: "MBBS, MD, DM (Cardiology)", location: "Mumbai", clinic: "Medify Clinic - Maharashtra, Mumbai", price: 800, best: true, onlineAvailable: true, hospitalVisit: true, languages: ["English"] },
         { id: 6, name: "Dr. Neha Gupta", specialty: "Cardiologist", rating: 4.8, experience: 18, experienceText: "18 YEARS", credentials: "MBBS, MD, DM (Cardiology)", location: "Delhi", clinic: "Medify Clinic - Delhi, New Delhi", price: 750, best: true, onlineAvailable: true, hospitalVisit: true, languages: ["English", "Hindi"] },
         { id: 7, name: "Dr. Amit Desai", specialty: "Cardiologist", rating: 4.7, experience: 15, experienceText: "15 YEARS", credentials: "MBBS, MD, DM (Cardiology)", location: "Bangalore", clinic: "Medify Clinic - Karnataka, Bangalore", price: 700, best: false, onlineAvailable: true, hospitalVisit: false, languages: ["English"] },
@@ -470,43 +481,38 @@ function attachBookingButtonListeners() {
         newButton.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Online Consult button clicked!', index);
-            const doctorId = parseInt(this.getAttribute('data-doctor-id'));
+            var rawId = this.getAttribute('data-doctor-id');
+            var doctorId = /^\d+$/.test(rawId) ? parseInt(rawId, 10) : rawId;
             const department = this.getAttribute('data-department');
-            console.log('Calling selectDoctor with:', { doctorId, department });
 
             if (typeof window.selectDoctor === 'function') {
                 window.selectDoctor(doctorId, department, 'online');
             } else {
-                console.error('selectDoctor function not found!');
                 alert('Booking function not available. Please refresh the page.');
             }
-        }, true); // Use capture phase
+        }, true);
     });
 
     // Hospital Visit buttons
     const hospitalButtons = document.querySelectorAll('.btn-hospital-visit');
-    console.log('Found hospital visit buttons:', hospitalButtons.length);
 
     hospitalButtons.forEach((button, index) => {
-        // Remove any existing listeners
         const newButton = button.cloneNode(true);
         button.parentNode.replaceChild(newButton, button);
 
         newButton.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Hospital Visit button clicked!', index);
-            const doctorId = parseInt(this.getAttribute('data-doctor-id'));
+            var rawId = this.getAttribute('data-doctor-id');
+            var doctorId = /^\d+$/.test(rawId) ? parseInt(rawId, 10) : rawId;
             const department = this.getAttribute('data-department');
 
             if (typeof window.selectDoctor === 'function') {
                 window.selectDoctor(doctorId, department, 'offline');
             } else {
-                console.error('selectDoctor function not found!');
                 alert('Booking function not available. Please refresh the page.');
             }
-        }, true); // Use capture phase
+        }, true);
     });
 }
 
@@ -515,12 +521,12 @@ window.attachBookingButtonListeners = attachBookingButtonListeners;
 
 // Helper function to create doctor card HTML - Make globally accessible
 window.createDoctorCard = function (doctor, department) {
+    var idAttr = (typeof doctor.id === 'string') ? ("'" + String(doctor.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'") : doctor.id;
+    var depEsc = (department || '').replace(/'/g, "\\'");
     return `
         <div class="doctor-card" style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; position: relative;">
-            <div class="on-time-badge" style="position: absolute; top: 15px; right: 15px; background: #1976d2; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; z-index: 1; pointer-events: none;">ON TIME GUARANTEE</div>
-            
             <div class="doctor-avatar" style="width: 100px; height: 100px; border-radius: 8px; background: #e0f2f1; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 20px; overflow: hidden;">
-                <img src="https://i.pravatar.cc/100?img=${doctor.id}" alt="${doctor.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas fa-user-md\\' style=\\'font-size: 3rem; color: #0097a7;\\'></i>';">
+                <i class="fas fa-user-md" style="font-size: 3rem; color: #0097a7;"></i>
             </div>
             
             <div class="doctor-details" style="flex: 1; display: flex; flex-direction: column;">
@@ -540,12 +546,12 @@ window.createDoctorCard = function (doctor, department) {
                         <div style="font-size: 1.4rem; font-weight: 700; color: #333; margin-bottom: 12px;">₹${doctor.price}</div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap; position: relative; z-index: 100;">
                             ${doctor.onlineAvailable ? `
-                                <button class="btn-online-consult" data-doctor-id="${doctor.id}" data-department="${department}" data-type="online" onclick="event.preventDefault(); event.stopPropagation(); console.log('Button clicked!'); if(window.selectDoctor) { window.selectDoctor(${doctor.id}, '${department}', 'online'); } else { alert('Function not loaded. Please refresh.'); } return false;" style="padding: 10px 24px; background: transparent; color: #0097a7; border: 2px solid #0097a7; border-radius: 6px; cursor: pointer !important; font-weight: 600; font-size: 0.95rem; transition: all 0.3s; white-space: nowrap; position: relative; z-index: 100 !important; pointer-events: auto !important; user-select: none; -webkit-tap-highlight-color: transparent;">
+                                <button class="btn-online-consult" data-doctor-id="${doctor.id}" data-department="${department}" data-type="online" onclick="event.preventDefault(); event.stopPropagation(); console.log('Button clicked!'); if(window.selectDoctor) { window.selectDoctor(${idAttr}, '${depEsc}', 'online'); } else { alert('Function not loaded. Please refresh.'); } return false;" style="padding: 10px 24px; background: transparent; color: #0097a7; border: 2px solid #0097a7; border-radius: 6px; cursor: pointer !important; font-weight: 600; font-size: 0.95rem; transition: all 0.3s; white-space: nowrap; position: relative; z-index: 100 !important; pointer-events: auto !important; user-select: none; -webkit-tap-highlight-color: transparent;">
                                     <i class="fas fa-video" style="margin-right: 5px; pointer-events: none;"></i> Online Consult
                                 </button>
                             ` : ''}
                             ${doctor.hospitalVisit ? `
-                                <button class="btn-hospital-visit" data-doctor-id="${doctor.id}" data-department="${department}" data-type="offline" onclick="event.preventDefault(); event.stopPropagation(); console.log('Button clicked!'); if(window.selectDoctor) { window.selectDoctor(${doctor.id}, '${department}', 'offline'); } else { alert('Function not loaded. Please refresh.'); } return false;" style="padding: 10px 24px; background: #0097a7; color: white; border: 2px solid #0097a7; border-radius: 6px; cursor: pointer !important; font-weight: 600; font-size: 0.95rem; transition: all 0.3s; white-space: nowrap; position: relative; z-index: 100 !important; pointer-events: auto !important; user-select: none; -webkit-tap-highlight-color: transparent;">
+                                <button class="btn-hospital-visit" data-doctor-id="${doctor.id}" data-department="${department}" data-type="offline" onclick="event.preventDefault(); event.stopPropagation(); console.log('Button clicked!'); if(window.selectDoctor) { window.selectDoctor(${idAttr}, '${depEsc}', 'offline'); } else { alert('Function not loaded. Please refresh.'); } return false;" style="padding: 10px 24px; background: #0097a7; color: white; border: 2px solid #0097a7; border-radius: 6px; cursor: pointer !important; font-weight: 600; font-size: 0.95rem; transition: all 0.3s; white-space: nowrap; position: relative; z-index: 100 !important; pointer-events: auto !important; user-select: none; -webkit-tap-highlight-color: transparent;">
                                     <i class="fas fa-hospital" style="margin-right: 5px; pointer-events: none;"></i> Hospital Visit
                                 </button>
                             ` : ''}
@@ -582,10 +588,12 @@ window.applyFilters = function (doctors) {
     if (experienceFilters.length > 0) {
         const ranges = Array.from(experienceFilters).map(f => f.value);
         filtered = filtered.filter(doctor => {
+            const exp = doctor.experience != null ? doctor.experience : 0;
             return ranges.some(range => {
-                if (range === '0-5') return doctor.experience >= 0 && doctor.experience <= 5;
-                if (range === '6-10') return doctor.experience >= 6 && doctor.experience <= 10;
-                if (range === '11-16') return doctor.experience >= 11 && doctor.experience <= 16;
+                if (range === '0-5') return exp >= 0 && exp <= 5;
+                if (range === '6-10') return exp >= 6 && exp <= 10;
+                if (range === '11-16') return exp >= 11 && exp <= 16;
+                if (range === '17+') return exp >= 17;
                 return true;
             });
         });
@@ -596,10 +604,11 @@ window.applyFilters = function (doctors) {
     if (feesFilters.length > 0) {
         const ranges = Array.from(feesFilters).map(f => f.value);
         filtered = filtered.filter(doctor => {
+            const price = doctor.price != null ? doctor.price : 0;
             return ranges.some(range => {
-                if (range === '100-500') return doctor.price >= 100 && doctor.price <= 500;
-                if (range === '500-1000') return doctor.price > 500 && doctor.price <= 1000;
-                if (range === '1000+') return doctor.price > 1000;
+                if (range === '100-500') return price >= 100 && price <= 500;
+                if (range === '500-1000') return price >= 500 && price <= 1000;
+                if (range === '1000+') return price > 1000;
                 return true;
             });
         });
@@ -610,7 +619,8 @@ window.applyFilters = function (doctors) {
     if (languageFilters.length > 0) {
         const languages = Array.from(languageFilters).map(f => f.value);
         filtered = filtered.filter(doctor => {
-            return languages.some(lang => doctor.languages.includes(lang));
+            const docLangs = doctor.languages && Array.isArray(doctor.languages) ? doctor.languages : [];
+            return languages.some(lang => docLangs.includes(lang));
         });
     }
 
@@ -685,9 +695,8 @@ function showBookingModal(doctor, consultationType) {
         <div class="schedule-appointment-container">
             <!-- Doctor Info Section -->
             <div class="doctor-profile-section">
-                <div class="on-time-badge-modal">ON TIME GUARANTEE</div>
                 <div class="doctor-avatar-large">
-                    <img src="https://i.pravatar.cc/80?img=${doctor.id}" alt="${doctor.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas fa-user-md\\' style=\\'font-size: 2.5rem; color: #0097a7;\\'></i>';">
+                    <i class="fas fa-user-md" style="font-size: 2.5rem; color: #0097a7;"></i>
                 </div>
                 <div class="doctor-profile-info">
                     <h3 class="doctor-name-large">${doctor.name}</h3>
@@ -758,13 +767,15 @@ function showBookingModal(doctor, consultationType) {
                 <span class="price-amount">₹${doctor.price}</span>
             </div>
             <button type="button" class="btn-continue-booking" onclick="confirmScheduleBooking('${doctor.id}', '${consultationType}')">
-                Continue
+                Request appointment
             </button>
         `;
         modalContent.appendChild(footer);
     } else {
         footer.style.display = 'flex';
         footer.querySelector('.price-amount').textContent = `₹${doctor.price}`;
+        footer.querySelector('.btn-continue-booking').textContent = 'Request appointment';
+        footer.querySelector('.btn-continue-booking').textContent = 'Request appointment';
         footer.querySelector('.btn-continue-booking').setAttribute('onclick', `confirmScheduleBooking('${doctor.id}', '${consultationType}')`);
     }
 
@@ -774,6 +785,9 @@ function showBookingModal(doctor, consultationType) {
     modal.style.opacity = '1';
     modal.style.zIndex = '2000';
     modal.style.position = 'fixed';
+
+    // Lock background scroll so only the modal scrolls
+    document.body.style.overflow = 'hidden';
 
     // Also ensure modal content is visible
     if (modalContent) {
@@ -819,43 +833,24 @@ function generateDateOptions() {
     return dates;
 }
 
-// Generate time slots
+// Generate time slots – 20 min each, 4 morning + 4 evening
 function generateTimeSlots() {
-    // Generate morning slots (08:00 AM to 11:50 AM - 24 slots)
-    const morningSlots = [];
-    for (let hour = 8; hour < 12; hour++) {
-        for (let minute = 0; minute < 60; minute += 10) {
-            const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-            const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-            const ampm = hour < 12 ? 'AM' : 'PM';
-            const time12 = `${hour12.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${ampm}`;
-            morningSlots.push({ label: time12, value: time24 });
-        }
+    function toSlot(hour, minute) {
+        const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        const ampm = hour < 12 ? 'AM' : 'PM';
+        const time12 = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
+        return { label: time12, value: time24 };
     }
-
-    // Generate evening slots (05:00 PM to 07:50 PM - 12 slots)
-    const eveningSlots = [];
-    for (let hour = 17; hour < 20; hour++) {
-        for (let minute = 0; minute < 60; minute += 10) {
-            const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-            const hour12 = hour > 12 ? hour - 12 : hour;
-            const ampm = hour < 12 ? 'AM' : 'PM';
-            const time12 = `${hour12.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${ampm}`;
-            eveningSlots.push({ label: time12, value: time24 });
-        }
-    }
-
+    const morningSlots = [
+        toSlot(8, 0), toSlot(8, 20), toSlot(8, 40), toSlot(9, 0)
+    ];
+    const eveningSlots = [
+        toSlot(17, 0), toSlot(17, 20), toSlot(17, 40), toSlot(18, 0)
+    ];
     return [
-        {
-            title: 'Morning',
-            icon: 'fa-sun',
-            slots: morningSlots
-        },
-        {
-            title: 'Evening',
-            icon: 'fa-sun',
-            slots: eveningSlots
-        }
+        { title: 'Morning', icon: 'fa-sun', slots: morningSlots },
+        { title: 'Evening', icon: 'fa-moon', slots: eveningSlots }
     ];
 }
 
@@ -892,78 +887,66 @@ function scrollDates(direction) {
     }
 }
 
-// Confirm schedule booking
+// Request appointment (replaces immediate booking) – saves to Firestore for doctor dashboard
 function confirmScheduleBooking(doctorId, consultationType) {
     if (!window.selectedDate || !window.selectedTime) {
-        alert('Please select a date and time slot');
+        alert('Please select a date and time slot.');
         return;
     }
 
-    // Get doctor info
     const department = window.currentDepartment || 'General Medicine';
     const doctor = window.doctorsDatabase[department]?.find(d => d.id == doctorId);
 
     if (!doctor) {
-        alert('Doctor information not found');
+        alert('Doctor information not found.');
         return;
     }
 
-    // Format date and time
     const selectedDate = new Date(window.selectedDate);
     const dateStr = selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     const timeStr = formatTime(window.selectedTime);
+    var doctorEmail = doctor.email || (doctor.id === 5000 ? 'doctor@medify.com' : null);
 
-    // Get modal elements
-    const modalBody = document.getElementById('booking-body');
-    const modalTitle = document.getElementById('booking-title');
-
-    if (modalBody && modalTitle) {
-        modalTitle.textContent = 'Booking Confirmed';
-
-        let actionButtonHTML = '';
-        if (consultationType === 'online') {
-            actionButtonHTML = `
-                <button onclick="window.joinVideoCall('${doctor.name}')" class="btn-continue-booking" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background-color: #28a745; color: white; border: none; font-size: 1rem; cursor: pointer; padding: 12px 24px;">
-                    <i class="fas fa-video" style="margin-right: 8px;"></i> Join Video Call
-                </button>
-            `;
+    function showSuccessUI() {
+        var modalBody = document.getElementById('booking-body');
+        var modalTitle = document.getElementById('booking-title');
+        if (modalBody && modalTitle) {
+            modalTitle.textContent = 'Request sent';
+            modalBody.innerHTML = '<div style="text-align: center; padding: 30px 20px;">' +
+                '<div style="width: 80px; height: 80px; background: #e0f2f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">' +
+                '<i class="fas fa-paper-plane" style="font-size: 3rem; color: #0097a7;"></i></div>' +
+                '<h3 style="color: #333; margin-bottom: 15px;">Request has been sent</h3>' +
+                '<p style="color: #666; margin-bottom: 25px; line-height: 1.7;">You\'ll be notified once the doctor accepts it and the appointment will be scheduled.</p>' +
+                '<p style="color: #555; font-size: 0.95rem;"><strong>' + doctor.name + '</strong><br><span style="color: #888;">' + dateStr + ' • ' + timeStr + '</span></p>' +
+                '<button type="button" class="btn-continue-booking" onclick="closeBookingModal()">Close</button></div>';
+            var footer = document.querySelector('.booking-footer');
+            if (footer) footer.style.display = 'none';
         } else {
-            actionButtonHTML = `
-                <button class="btn-continue-booking" onclick="closeBookingModal()">
-                    Close
-                </button>
-            `;
+            alert('Request has been sent. You\'ll be notified once the doctor accepts it.');
+            closeBookingModal();
         }
+    }
 
-        modalBody.innerHTML = `
-            <div style="text-align: center; padding: 30px 20px;">
-                <div style="width: 80px; height: 80px; background: #e0f2f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                    <i class="fas fa-check-circle" style="font-size: 3rem; color: #0097a7;"></i>
-                </div>
-                <h3 style="color: #333; margin-bottom: 15px;">Appointment Scheduled!</h3>
-                <p style="color: #666; margin-bottom: 25px; line-height: 1.6;">
-                    Your appointment with <strong>${doctor.name}</strong> has been confirmed.<br>
-                    <strong>Date:</strong> ${dateStr}<br>
-                    <strong>Time:</strong> ${timeStr}
-                </p>
-                ${actionButtonHTML}
-                <p style="color: #999; font-size: 0.9rem; margin-top: 20px;">A confirmation SMS has been sent to your registered number.</p>
-            </div>
-        `;
-
-        // Hide the footer if it exists as we included the button in the body
-        const footer = document.querySelector('.booking-footer');
-        if (footer) footer.style.display = 'none';
-
+    if (window.firebaseDb && doctorEmail) {
+        var auth = window.firebaseAuth;
+        var user = auth ? auth.currentUser : null;
+        var payload = {
+            doctorId: String(doctor.id),
+            doctorEmail: doctorEmail,
+            doctorName: doctor.name,
+            date: window.selectedDate,
+            timeSlot: window.selectedTime,
+            consultationType: consultationType || 'online',
+            status: 'pending',
+            consultationFee: doctor.price || 0,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            patientId: user ? user.uid : null,
+            patientEmail: user ? user.email : null,
+            patientName: user ? (user.displayName || null) : null
+        };
+        window.firebaseDb.collection('appointment_requests').add(payload).then(showSuccessUI).catch(function() { showSuccessUI(); });
     } else {
-        // Fallback if modal elements not found
-        alert(`Appointment Scheduled!\n\nDoctor: ${doctor.name}\nDate: ${dateStr}\nTime: ${timeStr}\nFee: ₹${doctor.price}\n\nYou will receive a confirmation SMS shortly.`);
-        if (consultationType === 'online') {
-            if (confirm('Do you want to join the video call waiting room now?')) {
-                window.location.href = `video-call.html?doctor=${encodeURIComponent(doctor.name)}`;
-            }
-        }
-        closeBookingModal();
+        showSuccessUI();
     }
 }
 
@@ -1105,26 +1088,103 @@ const profileIcon = document.getElementById('profile-icon');
 if (loginForm) {
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        // Simulate successful login
-        if (loginSubmitBtn && loginText && profileIcon) {
-            loginText.style.display = 'none';
-            profileIcon.style.display = 'block';
-            loginSubmitBtn.classList.add('profile-btn');
-            loginSubmitBtn.setAttribute('href', '#profile');
-            loginSubmitBtn.title = 'Profile';
+        var emailInput = document.getElementById('login-email');
+        var passwordInput = document.getElementById('login-password');
+        var email = emailInput ? emailInput.value.trim() : '';
+        var password = passwordInput ? passwordInput.value : '';
+        if (!email || !password) {
+            alert('Please enter email and password.');
+            return;
         }
-        modal.style.display = 'none';
-        alert('Login successful!');
+        var roleEl = document.getElementById('login-role');
+        var role = roleEl ? String(roleEl.value || '').trim().toLowerCase() : 'customer';
+        var isStaff = (role === 'doctor' || role === 'pharmacist' || role === 'delivery' || role === 'clinic');
+        var authToUse = isStaff ? window.firebaseStaffAuth : window.firebaseAuth;
+        if (typeof firebase === 'undefined' || !authToUse) {
+            alert('Login is not available. Please refresh the page.');
+            return;
+        }
+        var submitBtn = loginForm.querySelector('button[type="submit"]');
+        var originalBtnText = submitBtn ? submitBtn.textContent : 'Login';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Logging...';
+        }
+        // Customer uses default auth; staff uses separate "staff" auth so logging in one tab does not log out the other. LOCAL persistence for both.
+        var persistence = firebase.auth && firebase.auth.Auth && firebase.auth.Auth.Persistence && firebase.auth.Auth.Persistence.LOCAL;
+        var signInPromise = persistence
+            ? authToUse.setPersistence(persistence).then(function() { return authToUse.signInWithEmailAndPassword(email, password); })
+            : authToUse.signInWithEmailAndPassword(email, password);
+        signInPromise
+            .then(function() {
+                var returnUrl = null;
+                try {
+                    returnUrl = sessionStorage.getItem('medify_return_after_login');
+                    if (returnUrl) sessionStorage.removeItem('medify_return_after_login');
+                } catch (e) {}
+                if (returnUrl) {
+                    window.location.replace(returnUrl);
+                    return;
+                }
+                if (role === 'doctor') {
+                    try { sessionStorage.setItem('medify_doctor_role', '1'); } catch (e) {}
+                    window.location.replace('doctor-dashboard.html');
+                    return;
+                }
+                if (role === 'delivery') {
+                    try { sessionStorage.setItem('medify_delivery_role', '1'); } catch (e) {}
+                    window.location.replace('delivery-dashboard.html');
+                    return;
+                }
+                if (role === 'pharmacist') {
+                    try { sessionStorage.setItem('medify_pharmacist_role', '1'); } catch (e) {}
+                    window.location.replace('pharmacist-dashboard.html');
+                    return;
+                }
+                if (role === 'clinic') {
+                    try { sessionStorage.setItem('medify_clinic_role', '1'); } catch (e) {}
+                    window.location.replace('clinic-dashboard.html');
+                    return;
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                }
+                if (loginSubmitBtn && loginText && profileIcon) {
+                    loginText.style.display = 'none';
+                    profileIcon.style.display = 'block';
+                    loginSubmitBtn.classList.add('profile-btn');
+                    loginSubmitBtn.setAttribute('href', '#profile');
+                    loginSubmitBtn.title = 'Profile';
+                }
+                if (modal) modal.style.display = 'none';
+                alert('Login successful!');
+            })
+            .catch(function(err) {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                }
+                if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+                    alert('Invalid email or password. Please try again.');
+                } else {
+                    alert(err.message || 'Login failed. Please try again.');
+                }
+            });
     });
 }
 
-// Checkout button
+// Checkout button – save cart and go to checkout page
 const checkoutBtn = document.getElementById('checkout-btn');
 if (checkoutBtn) {
     checkoutBtn.addEventListener('click', () => {
         if (cart.length > 0) {
-            alert('Proceeding to checkout. This functionality will be integrated with payment gateway.');
-            // Here you would typically redirect to checkout page
+            try {
+                sessionStorage.setItem('medify_checkout_cart', JSON.stringify(cart));
+            } catch (e) {}
+            window.location.href = 'checkout.html';
+        } else {
+            alert('Your cart is empty. Add items to proceed.');
         }
     });
 }
@@ -1170,3 +1230,207 @@ if (typeof window.joinVideoCall === 'undefined') {
     };
 }
 
+// Patient notifications (when doctor accepts appointment, etc.)
+(function() {
+    var wrap = document.getElementById('nav-notifications-wrap');
+    var btn = document.getElementById('nav-notifications-btn');
+    var badge = document.getElementById('nav-notifications-badge');
+    var dropdown = document.getElementById('nav-notifications-dropdown');
+    var listEl = document.getElementById('nav-notifications-list');
+    var emptyEl = document.getElementById('nav-notifications-empty');
+    if (!wrap || !btn || !dropdown || !listEl) return;
+    var auth = window.firebaseAuth;
+    var db = window.firebaseDb;
+    if (!auth || !db) return;
+
+    var unsubscribe = null;
+
+    function renderNotifications(notifications) {
+        var unread = notifications.filter(function(n) { return !n.read; });
+        if (badge) {
+            badge.textContent = unread.length;
+            badge.style.display = unread.length ? 'flex' : 'none';
+        }
+        if (notifications.length === 0) {
+            if (listEl) listEl.innerHTML = '';
+            if (emptyEl) emptyEl.style.display = 'block';
+            return;
+        }
+        if (emptyEl) emptyEl.style.display = 'none';
+        notifications.sort(function(a, b) {
+            var ta = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
+            var tb = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0;
+            return tb - ta;
+        });
+        listEl.innerHTML = notifications.map(function(n) {
+            var timeStr = '';
+            if (n.createdAt && n.createdAt.toDate) {
+                var d = n.createdAt.toDate();
+                var diff = (Date.now() - d.getTime()) / 60000;
+                if (diff < 60) timeStr = Math.round(diff) + ' min ago';
+                else if (diff < 1440) timeStr = Math.round(diff / 60) + ' hr ago';
+                else timeStr = d.toLocaleDateString();
+            }
+            var attrs = ' data-id="' + n.id + '" data-type="' + (n.type || '') + '" data-appointment-request-id="' + (n.appointmentRequestId || '') + '" data-amount="' + (n.amount || 0) + '"';
+            return '<div class="nav-notification-item' + (n.read ? '' : ' unread') + '"' + attrs + '>' +
+                '<div class="nav-notification-title">' + (n.title || 'Notification') + '</div>' +
+                '<div class="nav-notification-body">' + (n.body || '') + '</div>' +
+                '<div class="nav-notification-time">' + timeStr + '</div></div>';
+        }).join('');
+    }
+
+    function openDropdown() {
+        dropdown.classList.add('open');
+        document.addEventListener('click', closeDropdownOnOutside);
+    }
+    function closeDropdown() {
+        dropdown.classList.remove('open');
+        document.removeEventListener('click', closeDropdownOnOutside);
+    }
+    function closeDropdownOnOutside(e) {
+        if (dropdown && !dropdown.contains(e.target) && btn && !btn.contains(e.target)) closeDropdown();
+    }
+
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (dropdown.classList.contains('open')) closeDropdown();
+        else openDropdown();
+    });
+
+    listEl.addEventListener('click', function(e) {
+        var item = e.target.closest('.nav-notification-item');
+        if (!item || !db) return;
+        var notifId = item.getAttribute('data-id');
+        var type = item.getAttribute('data-type');
+        var appointmentRequestId = item.getAttribute('data-appointment-request-id');
+        var amount = parseInt(item.getAttribute('data-amount'), 10) || 0;
+        if (type === 'appointment_accepted' && appointmentRequestId) {
+            db.collection('appointment_requests').doc(appointmentRequestId).get().then(function(snap) {
+                if (!snap.exists) return;
+                var req = snap.data();
+                if (req.paymentStatus === 'paid') {
+                    if (notifId) db.collection('notifications').doc(notifId).update({ read: true }).catch(function() {});
+                    closeDropdown();
+                    return;
+                }
+                var amt = req.consultationFee || amount || 750;
+                closeDropdown();
+                if (typeof window.openAppointmentPaymentModal === 'function') {
+                    window.openAppointmentPaymentModal(amt, appointmentRequestId, notifId);
+                } else {
+                    // Page has no payment modal (e.g. consultation) – go to page that has it with pay param
+                    var payUrl = 'index.html?pay=' + encodeURIComponent(appointmentRequestId) + (notifId ? '&notif=' + encodeURIComponent(notifId) : '');
+                    window.location.href = payUrl;
+                }
+            }).catch(function() {});
+            return;
+        }
+        if (notifId) db.collection('notifications').doc(notifId).update({ read: true }).catch(function() {});
+    });
+
+    auth.onAuthStateChanged(function(user) {
+        if (unsubscribe) {
+            unsubscribe();
+            unsubscribe = null;
+        }
+        if (!user) {
+            wrap.style.display = 'none';
+            return;
+        }
+        wrap.style.display = '';
+        unsubscribe = db.collection('notifications').where('userId', '==', user.uid).onSnapshot(function(snap) {
+            var items = [];
+            snap.forEach(function(doc) {
+                var d = doc.data();
+                d.id = doc.id;
+                items.push(d);
+            });
+            renderNotifications(items);
+        }, function(err) { console.warn('Notifications snapshot', err); });
+    });
+})();
+
+// Payment modal for confirmed appointments
+(function() {
+    var overlay = document.getElementById('payment-modal-overlay');
+    var amountEl = document.getElementById('payment-modal-amount');
+    var payBtn = document.getElementById('payment-modal-pay-btn');
+    var closeBtn = document.getElementById('payment-modal-close');
+    if (!overlay || !amountEl || !payBtn) return;
+    var currentAppointmentRequestId = null;
+    var currentNotificationId = null;
+
+    window.openAppointmentPaymentModal = function(amount, appointmentRequestId, notificationId) {
+        currentAppointmentRequestId = appointmentRequestId;
+        currentNotificationId = notificationId || null;
+        amountEl.textContent = '₹' + (amount || 0);
+        overlay.classList.add('open');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    };
+
+    function closePaymentModal() {
+        overlay.classList.remove('open');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        currentAppointmentRequestId = null;
+        currentNotificationId = null;
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', closePaymentModal);
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) closePaymentModal();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) closePaymentModal();
+    });
+
+    payBtn.addEventListener('click', function() {
+        var id = currentAppointmentRequestId;
+        var db = window.firebaseDb;
+        if (!id || !db) return;
+        var amt = parseInt(amountEl.textContent.replace(/[^0-9]/g, ''), 10) || 0;
+        payBtn.disabled = true;
+        payBtn.textContent = 'Processing...';
+        db.collection('appointment_requests').doc(id).update({
+            paymentStatus: 'paid',
+            amountPaid: amt,
+            paidAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+            if (currentNotificationId) db.collection('notifications').doc(currentNotificationId).update({ read: true }).catch(function() {});
+            closePaymentModal();
+            payBtn.disabled = false;
+            payBtn.textContent = 'Pay now';
+            alert('Payment successful! Your appointment is confirmed.');
+        }).catch(function(err) {
+            payBtn.disabled = false;
+            payBtn.textContent = 'Pay now';
+            alert('Payment failed. Please try again.');
+        });
+    });
+})();
+
+// Open payment modal from URL (?pay=appointmentRequestId) when customer lands from notification link
+(function() {
+    var params = new URLSearchParams(window.location.search);
+    var payId = params.get('pay');
+    var notifId = params.get('notif');
+    if (!payId || typeof window.openAppointmentPaymentModal !== 'function') return;
+    var auth = window.firebaseAuth;
+    var db = window.firebaseDb;
+    if (!auth || !db) return;
+    function tryOpenPayment(user) {
+        if (!user) return;
+        db.collection('appointment_requests').doc(payId).get().then(function(snap) {
+            if (!snap.exists) return;
+            var req = snap.data();
+            if (req.patientId && req.patientId !== user.uid) return;
+            if (req.paymentStatus === 'paid') return;
+            var amt = req.consultationFee || 750;
+            window.openAppointmentPaymentModal(amt, payId, notifId || null);
+            try { history.replaceState({}, '', window.location.pathname + window.location.hash); } catch (e) {}
+        }).catch(function() {});
+    }
+    if (auth.currentUser) tryOpenPayment(auth.currentUser);
+    else auth.onAuthStateChanged(function(user) { if (user) tryOpenPayment(user); });
+})();

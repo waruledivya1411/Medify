@@ -227,6 +227,22 @@
             background: #007a87;
         }
 
+        .test-book-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0097a7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .test-book-btn:hover {
+            background: #007a87;
+        }
+
         .carousel-nav-btn {
             position: absolute;
             top: 50%;
@@ -513,7 +529,7 @@
                                 <span class="test-original-price">₹995</span>
                                 <span class="test-discount">60% off</span>
                             </div>
-                            <button class="test-add-btn">Add</button>
+                            <button class="test-book-btn" data-test-name="CBC Test (Complete Blood Count)" data-test-price="398">Book test</button>
                         </div>
                         
                         <div class="test-card">
@@ -529,7 +545,7 @@
                                 <span class="test-original-price">₹1572</span>
                                 <span class="test-discount">60% off</span>
                             </div>
-                            <button class="test-add-btn">Add</button>
+                            <button class="test-book-btn" data-test-name="HbA1c Test (Hemoglobin A1c)" data-test-price="629">Book test</button>
                         </div>
                         
                         <div class="test-card">
@@ -545,7 +561,7 @@
                                 <span class="test-original-price">₹250</span>
                                 <span class="test-discount">60% off</span>
                             </div>
-                            <button class="test-add-btn">Add</button>
+                            <button class="test-book-btn" data-test-name="FBS (Fasting Blood Sugar) Test" data-test-price="100">Book test</button>
                         </div>
                         
                         <div class="test-card">
@@ -561,7 +577,7 @@
                                 <span class="test-original-price">₹2000</span>
                                 <span class="test-discount">60% off</span>
                             </div>
-                            <button class="test-add-btn">Add</button>
+                            <button class="test-book-btn" data-test-name="Lipid Profile Test" data-test-price="800">Book test</button>
                         </div>
                         
                         <div class="test-card">
@@ -577,7 +593,7 @@
                                 <span class="test-original-price">₹1125</span>
                                 <span class="test-discount">60% off</span>
                             </div>
-                            <button class="test-add-btn">Add</button>
+                            <button class="test-book-btn" data-test-name="Thyroid Profile Test" data-test-price="450">Book test</button>
                         </div>
                         
                         <div class="test-card">
@@ -593,7 +609,7 @@
                                 <span class="test-original-price">₹1375</span>
                                 <span class="test-discount">60% off</span>
                             </div>
-                            <button class="test-add-btn">Add</button>
+                            <button class="test-book-btn" data-test-name="Liver Function Test" data-test-price="550">Book test</button>
                         </div>
                     </div>
                     <button class="carousel-nav-btn next" id="carousel-next">
@@ -624,9 +640,9 @@
                 <div class="footer-section">
                     <h4>Contact</h4>
                     <ul>
-                        <li><i class="fas fa-phone"></i> +1 234 567 8900</li>
+                        <li><i class="fas fa-phone"></i> +91 9822961688</li>
                         <li><i class="fas fa-envelope"></i> support@medify.com</li>
-                        <li><i class="fas fa-map-marker-alt"></i> 123 Medical Street, Health City</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Vivekanandnagar , Kopargaon , Maharashtra , India</li>
                     </ul>
                 </div>
             </div>
@@ -703,17 +719,148 @@
         </div>
     </div>
 
+    <!-- Lab Test Booking Modal (same as labtests-list) -->
+    <div id="lab-booking-modal" class="modal">
+        <div class="modal-content">
+            <div class="lab-booking-header">
+                <h2 id="lab-booking-title">Book test</h2>
+                <span class="close" id="lab-booking-close" aria-label="Close">&times;</span>
+            </div>
+            <div id="lab-booking-body">
+                <div id="lab-step-1">
+                    <p class="lab-booking-prompt">How would you like to get the test done?</p>
+                    <button type="button" class="lab-option-btn" data-choice="clinic">
+                        <span class="lab-option-icon"><i class="fas fa-hospital"></i></span>
+                        <div class="lab-option-text">
+                            <strong>Visit clinic</strong>
+                            <span class="lab-option-desc">Book appointment and go to the lab</span>
+                        </div>
+                    </button>
+                    <button type="button" class="lab-option-btn" data-choice="home">
+                        <span class="lab-option-icon"><i class="fas fa-home"></i></span>
+                        <div class="lab-option-text">
+                            <strong>Home collection</strong>
+                            <span class="lab-option-desc">Schedule and we'll come to your home</span>
+                        </div>
+                    </button>
+                </div>
+                <div id="lab-step-2" class="lab-step-section">
+                    <p class="lab-booking-prompt">Select a clinic near you</p>
+                    <div id="lab-clinics-list"></div>
+                    <button type="button" class="btn btn-secondary" id="lab-back-from-clinics">Back</button>
+                </div>
+                <div id="lab-step-3" class="lab-step-section">
+                    <div class="lab-form-group">
+                        <span class="lab-label">Preferred date</span>
+                        <input type="date" id="lab-booking-date" min="">
+                    </div>
+                    <div class="lab-form-group">
+                        <span class="lab-label">Preferred time slot</span>
+                        <select id="lab-booking-time">
+                            <option value="08:00-10:00">8:00 AM – 10:00 AM</option>
+                            <option value="10:00-12:00">10:00 AM – 12:00 PM</option>
+                            <option value="14:00-16:00">2:00 PM – 4:00 PM</option>
+                            <option value="16:00-18:00">4:00 PM – 6:00 PM</option>
+                        </select>
+                    </div>
+                    <div class="lab-booking-actions">
+                        <button type="button" class="btn btn-secondary" id="lab-back-from-date">Back</button>
+                        <button type="button" class="btn btn-primary" id="lab-request-appointment">Request appointment</button>
+                    </div>
+                </div>
+                <div id="lab-step-done" class="lab-step-section">
+                    <div class="lab-done-wrap">
+                        <div class="lab-done-icon"><i class="fas fa-paper-plane"></i></div>
+                        <h3>Request has been sent</h3>
+                        <p>You'll be notified once the slot is confirmed and the appointment will be scheduled.</p>
+                        <button type="button" class="btn btn-primary" id="lab-booking-done-close">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <script src="script.js"></script>
+    <script src="labtests-data.js"></script>
     <script>
-        // Carousel navigation
-        const carousel = document.getElementById('tests-carousel');
-        const nextBtn = document.getElementById('carousel-next');
-        
-        if (nextBtn) {
-            nextBtn.addEventListener('click', () => {
-                carousel.scrollBy({ left: 300, behavior: 'smooth' });
-            });
+        var labClinicsNear = [
+            { name: 'Medify Lab - Koramangala', address: '80 Feet Rd, Koramangala, Bengaluru' },
+            { name: 'Medify Lab - Indiranagar', address: '100 Feet Rd, Indiranagar, Bengaluru' },
+            { name: 'Medify Lab - HSR Layout', address: 'Sector 2, HSR Layout, Bengaluru' },
+            { name: 'Medify Lab - Whitefield', address: 'ITPL Main Rd, Whitefield, Bengaluru' }
+        ];
+        function openLabBookingModal(testName, testPrice) {
+            window._labBooking = { testName: testName, testPrice: testPrice, choice: null, clinic: null };
+            document.getElementById('lab-booking-title').textContent = 'Book: ' + testName;
+            document.getElementById('lab-step-1').style.display = 'block';
+            document.getElementById('lab-step-2').style.display = 'none';
+            document.getElementById('lab-step-3').style.display = 'none';
+            document.getElementById('lab-step-done').style.display = 'none';
+            document.getElementById('lab-booking-modal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
         }
+        function closeLabBookingModal() {
+            document.getElementById('lab-booking-modal').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        function setMinDate() {
+            var d = new Date();
+            d.setDate(d.getDate() + 1);
+            document.getElementById('lab-booking-date').min = d.toISOString().slice(0, 10);
+        }
+        document.getElementById('lab-booking-close').onclick = closeLabBookingModal;
+        document.getElementById('lab-booking-modal').onclick = function(e) { if (e.target.id === 'lab-booking-modal') closeLabBookingModal(); };
+        document.querySelectorAll('.lab-option-btn').forEach(function(btn) {
+            btn.onclick = function() {
+                window._labBooking.choice = this.getAttribute('data-choice');
+                document.getElementById('lab-step-1').style.display = 'none';
+                document.getElementById('lab-step-2').style.display = 'block';
+                var list = document.getElementById('lab-clinics-list');
+                list.innerHTML = labClinicsNear.map(function(c, i) {
+                    return '<button type="button" class="lab-clinic-option" data-index="' + i + '"><strong>' + c.name + '</strong><span>' + c.address + '</span></button>';
+                }).join('');
+                list.querySelectorAll('.lab-clinic-option').forEach(function(b) {
+                    b.onclick = function() {
+                        window._labBooking.clinic = labClinicsNear[parseInt(b.getAttribute('data-index'), 10)];
+                        document.getElementById('lab-step-2').style.display = 'none';
+                        document.getElementById('lab-step-3').style.display = 'block';
+                        setMinDate();
+                    };
+                });
+            };
+        });
+        document.getElementById('lab-back-from-clinics').onclick = function() {
+            document.getElementById('lab-step-2').style.display = 'none';
+            document.getElementById('lab-step-1').style.display = 'block';
+        };
+        document.getElementById('lab-back-from-date').onclick = function() {
+            document.getElementById('lab-step-3').style.display = 'none';
+            document.getElementById('lab-step-2').style.display = 'block';
+        };
+        document.getElementById('lab-request-appointment').onclick = function() {
+            var dt = document.getElementById('lab-booking-date').value;
+            if (!dt) { alert('Please select a date.'); return; }
+            document.getElementById('lab-step-3').style.display = 'none';
+            document.getElementById('lab-step-done').style.display = 'block';
+        };
+        document.getElementById('lab-booking-done-close').onclick = closeLabBookingModal;
+        window.openLabBookingModal = openLabBookingModal;
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.test-book-btn');
+            if (!btn) return;
+            var testName = btn.getAttribute('data-test-name');
+            var testPrice = btn.getAttribute('data-test-price');
+            if (testName && testPrice) openLabBookingModal(testName, parseInt(testPrice, 10));
+        });
+        // Carousel
+        var carousel = document.getElementById('tests-carousel');
+        var nextBtn = document.getElementById('carousel-next');
+        if (nextBtn) nextBtn.addEventListener('click', function() { carousel.scrollBy({ left: 300, behavior: 'smooth' }); });
     </script>
 </body>
 </html>

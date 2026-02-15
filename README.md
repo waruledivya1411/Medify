@@ -125,9 +125,9 @@ The platform is fully responsive and works seamlessly on:
 
 ## 📞 Contact Information
 
-- **Phone**: +1 234 567 8900
+- **Phone**: +91 9822961688
 - **Email**: support@medify.com
-- **Address**: 123 Medical Street, Health City
+- **Address**: Vivekanandnagar , Kopargaon , Maharashtra , India
 
 ## 📝 Notes
 

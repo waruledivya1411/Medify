@@ -154,9 +154,16 @@
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const doctorName = urlParams.get('doctor') || 'Doctor';
+        const patientName = urlParams.get('patient') || '';
+        const role = urlParams.get('role') || '';
         
         document.getElementById('doctor-name').textContent = doctorName;
-        document.getElementById('doctor-label').textContent = doctorName;
+        const labelEl = document.getElementById('doctor-label');
+        if (role === 'doctor' && patientName) {
+            labelEl.textContent = 'Consultation with ' + patientName;
+        } else {
+            labelEl.textContent = doctorName;
+        }
 
         // Timer functionality
         let seconds = 0;

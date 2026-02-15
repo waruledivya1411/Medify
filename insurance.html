@@ -259,6 +259,79 @@
             color: #666;
         }
 
+        .member-age-editable {
+            cursor: pointer;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+        }
+
+        .member-age-editable:hover {
+            color: #ff9800;
+        }
+
+        .insurance-plans-results {
+            padding: 3rem 0;
+            background: #f8f9fa;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .plan-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        .plan-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .plan-card-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .plan-badge {
+            background: #ff9800;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .plan-sum-insured {
+            color: #0097a7;
+            font-weight: 600;
+            margin: 0 0 0.5rem;
+        }
+
+        .plan-premium {
+            margin: 0 0 1rem;
+            color: #333;
+        }
+
+        .plan-features {
+            margin: 0 0 1rem;
+            padding-left: 1.2rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .plan-card .btn {
+            width: 100%;
+        }
+
         .member-checkbox {
             width: 24px;
             height: 24px;
@@ -627,10 +700,6 @@
                     
                     <div class="insurance-badges">
                         <div class="insurance-badge">
-                            <i class="fas fa-certificate"></i>
-                            <span>LICENSED BY IRDAI</span>
-                        </div>
-                        <div class="insurance-badge">
                             <i class="fas fa-hospital"></i>
                             <span>NETWORK 11000+ HOSPITALS</span>
                         </div>
@@ -662,7 +731,7 @@
                                 </div>
                                 <div class="member-info">
                                     <div class="member-name">Self</div>
-                                    <div class="member-age" id="self-age">25 Years</div>
+                                    <div class="member-age member-age-editable" data-age="25" title="Click to edit">25 Years</div>
                                 </div>
                                 <div class="member-checkbox">
                                     <i class="fas fa-check"></i>
@@ -675,7 +744,7 @@
                                 </div>
                                 <div class="member-info">
                                     <div class="member-name">Wife</div>
-                                    <div class="member-age">Add age</div>
+                                    <div class="member-age member-age-editable" data-age="" title="Click to add age">Add age</div>
                                 </div>
                                 <div class="member-checkbox">
                                     <i class="fas fa-check"></i>
@@ -688,7 +757,7 @@
                                 </div>
                                 <div class="member-info">
                                     <div class="member-name">Mother</div>
-                                    <div class="member-age">Add age</div>
+                                    <div class="member-age member-age-editable" data-age="" title="Click to add age">Add age</div>
                                 </div>
                                 <div class="member-checkbox">
                                     <i class="fas fa-check"></i>
@@ -701,7 +770,7 @@
                                 </div>
                                 <div class="member-info">
                                     <div class="member-name">Father</div>
-                                    <div class="member-age">Add age</div>
+                                    <div class="member-age member-age-editable" data-age="" title="Click to add age">Add age</div>
                                 </div>
                                 <div class="member-checkbox">
                                     <i class="fas fa-check"></i>
@@ -723,10 +792,80 @@
                     <!-- View Plans Button -->
                     <button class="view-plans-btn" id="view-plans-btn">View Plans</button>
                     
+                    <!-- Member details modal -->
+                    <div id="member-details-modal" class="modal" style="display: none;">
+                        <div class="modal-content" style="max-width: 360px;">
+                            <span class="close" id="close-member-modal">&times;</span>
+                            <h2 style="margin-top: 0;">Member details</h2>
+                            <p class="form-section-label" id="member-modal-title">Add age for this member</p>
+                            <div class="form-group">
+                                <label>Age (years) <span style="color: #c62828;">*</span></label>
+                                <input type="number" id="member-detail-age" min="1" max="120" placeholder="e.g. 35">
+                            </div>
+                            <button type="button" class="btn btn-primary btn-block" id="member-detail-save">Save</button>
+                        </div>
+                    </div>
+                    
                     <!-- Disclaimer -->
                     <p class="disclaimer">
                         By clicking on 'View Plans' you agree to our <a href="#">Privacy Policy</a>, <a href="#">Terms of Use</a> & <a href="#">Disclaimer</a>
                     </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plans results (shown after View Plans) -->
+        <div id="insurance-plans-results" class="insurance-plans-results" style="display: none;">
+            <div class="container">
+                <h2 class="lifestages-title">Plans for you</h2>
+                <p class="lifestages-description">Based on the members and details you selected. Compare and choose a plan.</p>
+                <div class="plans-grid" id="plans-grid">
+                    <div class="plan-card">
+                        <div class="plan-card-header">
+                            <h3>Family Health Floater</h3>
+                            <span class="plan-badge">Popular</span>
+                        </div>
+                        <div class="plan-card-body">
+                            <p class="plan-sum-insured">Sum insured: ₹10 Lakh</p>
+                            <p class="plan-premium">Premium from <strong>₹8,500</strong>/year</p>
+                            <ul class="plan-features">
+                                <li>Room rent no limit</li>
+                                <li>Restoration benefit</li>
+                                <li>Annual health check-up</li>
+                            </ul>
+                        </div>
+                        <button type="button" class="btn btn-primary">Get quote</button>
+                    </div>
+                    <div class="plan-card">
+                        <div class="plan-card-header">
+                            <h3>Comprehensive Care</h3>
+                        </div>
+                        <div class="plan-card-body">
+                            <p class="plan-sum-insured">Sum insured: ₹25 Lakh</p>
+                            <p class="plan-premium">Premium from <strong>₹18,000</strong>/year</p>
+                            <ul class="plan-features">
+                                <li>Critical illness cover</li>
+                                <li>11,000+ network hospitals</li>
+                                <li>Cashless claims</li>
+                            </ul>
+                        </div>
+                        <button type="button" class="btn btn-primary">Get quote</button>
+                    </div>
+                    <div class="plan-card">
+                        <div class="plan-card-header">
+                            <h3>Senior Secure</h3>
+                        </div>
+                        <div class="plan-card-body">
+                            <p class="plan-sum-insured">Sum insured: ₹15 Lakh</p>
+                            <p class="plan-premium">Premium from <strong>₹12,500</strong>/year</p>
+                            <ul class="plan-features">
+                                <li>Pre-existing disease cover</li>
+                                <li>No room rent cap</li>
+                                <li>Quick claim settlement</li>
+                            </ul>
+                        </div>
+                        <button type="button" class="btn btn-primary">Get quote</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -843,9 +982,9 @@
                 <div class="footer-section">
                     <h4>Contact</h4>
                     <ul>
-                        <li><i class="fas fa-phone"></i> +1 234 567 8900</li>
+                        <li><i class="fas fa-phone"></i> +91 9822961688</li>
                         <li><i class="fas fa-envelope"></i> support@medify.com</li>
-                        <li><i class="fas fa-map-marker-alt"></i> 123 Medical Street, Health City</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Vivekanandnagar , Kopargaon , Maharashtra , India</li>
                     </ul>
                 </div>
             </div>
@@ -900,6 +1039,11 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <script src="script.js"></script>
     <script>
         // Gender selection
@@ -958,7 +1102,7 @@
                 </div>
                 <div class="member-info">
                     <div class="member-name">${type} ${number}</div>
-                    <div class="member-age">Add age</div>
+                    <div class="member-age member-age-editable" data-age="" title="Click to add age">Add age</div>
                 </div>
                 <div class="member-checkbox">
                     <i class="fas fa-check"></i>
@@ -977,32 +1121,67 @@
             membersList.appendChild(childItem);
         }
 
-        // View Plans button
-        document.getElementById('view-plans-btn').addEventListener('click', function() {
-            const selectedMembers = [];
-            document.querySelectorAll('.member-item.selected').forEach(item => {
-                selectedMembers.push(item.dataset.member);
-            });
-            
-            const selectedGender = document.querySelector('.gender-btn.active').dataset.gender;
-            
-            // Store selection and redirect to plans page (or show plans)
-            alert(`Viewing plans for:\nGender: ${selectedGender}\nMembers: ${selectedMembers.join(', ')}\nChildren: ${sonCount} son(s), ${daughterCount} daughter(s)`);
-            
-            // You can redirect to a plans listing page here
-            // window.location.href = 'insurance-plans.html?gender=' + selectedGender + '&members=' + selectedMembers.join(',');
+        // Member details modal: open when clicking any "Add age" / age
+        let currentAgeEl = null;
+        const memberModal = document.getElementById('member-details-modal');
+        const memberAgeInput = document.getElementById('member-detail-age');
+        const memberModalTitle = document.getElementById('member-modal-title');
+
+        document.getElementById('members-list').addEventListener('click', function(e) {
+            const ageEl = e.target.closest('.member-age-editable');
+            if (!ageEl) return;
+            e.preventDefault();
+            e.stopPropagation();
+            currentAgeEl = ageEl;
+            const memberName = ageEl.closest('.member-item').querySelector('.member-name');
+            memberModalTitle.textContent = 'Age for ' + (memberName ? memberName.textContent : 'member');
+            memberAgeInput.value = ageEl.getAttribute('data-age') || '';
+            memberAgeInput.placeholder = 'e.g. 35';
+            memberModal.style.display = 'flex';
+            memberAgeInput.focus();
         });
 
-        // Age input for self (can be extended for other members)
-        const selfAgeInput = document.getElementById('self-age');
-        if (selfAgeInput) {
-            selfAgeInput.addEventListener('click', function() {
-                const age = prompt('Enter your age:');
-                if (age && !isNaN(age) && age > 0 && age < 120) {
-                    this.textContent = age + ' Years';
-                }
-            });
+        function closeMemberModal() {
+            memberModal.style.display = 'none';
+            currentAgeEl = null;
         }
+
+        document.getElementById('close-member-modal').addEventListener('click', closeMemberModal);
+        memberModal.addEventListener('click', function(e) {
+            if (e.target === memberModal) closeMemberModal();
+        });
+
+        document.getElementById('member-detail-save').addEventListener('click', function() {
+            const age = parseInt(memberAgeInput.value, 10);
+            if (isNaN(age) || age < 1 || age > 120) {
+                alert('Please enter a valid age (1–120).');
+                return;
+            }
+            if (currentAgeEl) {
+                currentAgeEl.setAttribute('data-age', age);
+                currentAgeEl.textContent = age + ' Years';
+            }
+            closeMemberModal();
+        });
+
+        // View Plans button: validate all selected members have age, then show plans
+        document.getElementById('view-plans-btn').addEventListener('click', function() {
+            const selected = document.querySelectorAll('.member-item.selected');
+            const missing = [];
+            selected.forEach(function(item) {
+                const ageEl = item.querySelector('.member-age-editable');
+                const nameEl = item.querySelector('.member-name');
+                const name = nameEl ? nameEl.textContent : item.dataset.member;
+                const age = ageEl ? ageEl.getAttribute('data-age') : '';
+                if (!age || age === '') missing.push(name);
+            });
+            if (missing.length > 0) {
+                alert('Please add age for: ' + missing.join(', '));
+                return;
+            }
+            document.getElementById('insurance-plans-results').style.display = 'block';
+            document.getElementById('insurance-plans-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
     </script>
 </body>
 </html>

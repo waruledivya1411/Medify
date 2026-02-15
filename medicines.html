@@ -134,9 +134,9 @@
                 <div class="footer-section">
                     <h4>Contact</h4>
                     <ul>
-                        <li><i class="fas fa-phone"></i> +1 234 567 8900</li>
+                        <li><i class="fas fa-phone"></i> +91 9822961688</li>
                         <li><i class="fas fa-envelope"></i> support@medify.com</li>
-                        <li><i class="fas fa-map-marker-alt"></i> 123 Medical Street, Health City</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Vivekanandnagar , Kopargaon , Maharashtra , India</li>
                     </ul>
                 </div>
             </div>
@@ -213,13 +213,53 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <script src="script.js"></script>
     <script src="medicines-data.js"></script>
     <script>
         let currentCategory = 'All Products';
         let allProducts = [];
 
-        // Get icon based on product image type
+        // Image path from product name (e.g. "Diaper Pants Large" -> "images/products/diaper-pants-large.jpg")
+        function getProductImageSlug(name) {
+            return name.toLowerCase()
+                .replace(/\+/g, '-plus')
+                .replace(/&/g, 'and')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '');
+        }
+        function getProductImageUrl(product) {
+            if (product.imageFile) return 'images/products/' + product.imageFile;
+            var name = typeof product === 'string' ? product : product.name;
+            return 'images/products/' + getProductImageSlug(name) + '.jpg';
+        }
+
+        // Real photos (Pexels, free to use) – one per product type so image matches name
+        var productTypeImageUrl = {
+            pills: 'https://images.pexels.com/photos/4210607/pexels-photo-4210607.jpeg?auto=compress&cs=tinysrgb&w=400',
+            capsules: 'https://images.pexels.com/photos/159211/pexels-photo-159211.jpeg?auto=compress&cs=tinysrgb&w=400',
+            bottle: 'https://images.pexels.com/photos/5994631/pexels-photo-5994631.jpeg?auto=compress&cs=tinysrgb&w=400',
+            jar: 'https://images.pexels.com/photos/5945962/pexels-photo-5945962.jpeg?auto=compress&cs=tinysrgb&w=400',
+            baby: 'https://images.pexels.com/photos/1648374/pexels-photo-1648374.jpeg?auto=compress&cs=tinysrgb&w=400',
+            device: 'https://images.pexels.com/photos/7659574/pexels-photo-7659574.jpeg?auto=compress&cs=tinysrgb&w=400',
+            box: 'https://images.pexels.com/photos/7659574/pexels-photo-7659574.jpeg?auto=compress&cs=tinysrgb&w=400',
+            tube: 'https://images.pexels.com/photos/3985062/pexels-photo-3985062.jpeg?auto=compress&cs=tinysrgb&w=400',
+            pack: 'https://images.pexels.com/photos/4210607/pexels-photo-4210607.jpeg?auto=compress&cs=tinysrgb&w=400',
+            kit: 'https://images.pexels.com/photos/1282317/pexels-photo-1282317.jpeg?auto=compress&cs=tinysrgb&w=400',
+            roll: 'https://images.pexels.com/photos/1282317/pexels-photo-1282317.jpeg?auto=compress&cs=tinysrgb&w=400',
+            bag: 'https://images.pexels.com/photos/3985062/pexels-photo-3985062.jpeg?auto=compress&cs=tinysrgb&w=400',
+            soap: 'https://images.pexels.com/photos/3985325/pexels-photo-3985325.jpeg?auto=compress&cs=tinysrgb&w=400'
+        };
+        function getProductPhotoUrl(product) {
+            return productTypeImageUrl[product.image] || productTypeImageUrl.pills;
+        }
+
+        // Icon by product type – only pills/tablets get pill icon; no tablet icon for other names
         function getProductIcon(imageType) {
             const icons = {
                 'pills': 'fas fa-pills',
@@ -236,7 +276,7 @@
                 'soap': 'fas fa-soap',
                 'capsules': 'fas fa-capsules'
             };
-            return icons[imageType] || 'fas fa-pills';
+            return icons[imageType] || 'fas fa-cube';
         }
 
         // Display products
@@ -266,10 +306,15 @@
 
             productsGrid.innerHTML = products.map(product => {
                 const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+                const imageUrl = getProductImageUrl(product);
+                const photoUrl = getProductPhotoUrl(product);
+                const iconClass = getProductIcon(product.image);
+                const safeName = product.name.replace(/"/g, '&quot;');
                 return `
                     <div class="product-card">
                         <div class="product-image">
-                            <i class="${getProductIcon(product.image)}"></i>
+                            <img src="${imageUrl}" data-fallback="${photoUrl}" alt="${safeName}" onerror="if(this.dataset.fallback && !this.dataset.tried){ this.dataset.tried='1'; this.src=this.dataset.fallback; } else { this.style.display='none'; this.nextElementSibling.classList.remove('hide'); }">
+                            <span class="product-image-fallback hide"><i class="${iconClass}"></i></span>
                         </div>
                         <h4>${product.name}</h4>
                         <p class="product-desc">${product.description}</p>
@@ -279,7 +324,7 @@
                                 ${product.originalPrice ? `<span class="original-price" style="text-decoration: line-through; color: #999; font-size: 0.9rem; margin-left: 0.5rem;">₹${product.originalPrice}</span>` : ''}
                                 ${discount > 0 ? `<span class="discount-badge" style="background: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 0.5rem;">${discount}% OFF</span>` : ''}
                             </div>
-                            <button class="add-to-cart" onclick="addProductToCart(${product.id}, '${product.name.replace(/'/g, "\\'")}', ${product.price})">Add to Cart</button>
+                            <button class="add-to-cart" onclick="addProductToCart(${product.id}, '${product.name.replace(/'/g, "\\'")}', ${product.price}, '${product.image}')">Add to Cart</button>
                         </div>
                     </div>
                 `;
@@ -306,14 +351,15 @@
             });
         }
 
-        // Add product to cart
-        function addProductToCart(id, name, price) {
+        // Add product to cart (imageType = product.image so cart shows correct icon, not tablet)
+        function addProductToCart(id, name, price, imageType) {
             if (typeof window.addToCart === 'function') {
                 window.addToCart({
                     id: id,
                     name: name,
                     price: price,
-                    type: 'medicine'
+                    type: 'medicine',
+                    imageType: imageType || 'cube'
                 });
             } else {
                 alert(`Added ${name} to cart!`);

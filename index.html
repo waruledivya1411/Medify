@@ -33,6 +33,17 @@
                 <li class="nav-item">
                     <a href="#about" class="nav-link">About Us</a>
                 </li>
+                <li class="nav-item nav-item-notifications" id="nav-notifications-wrap" style="display: none;">
+                    <button type="button" class="nav-link nav-notifications-btn" id="nav-notifications-btn" aria-label="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="nav-notifications-badge" id="nav-notifications-badge">0</span>
+                    </button>
+                    <div class="nav-notifications-dropdown" id="nav-notifications-dropdown">
+                        <div class="nav-notifications-header">Notifications</div>
+                        <div class="nav-notifications-list" id="nav-notifications-list"></div>
+                        <div class="nav-notifications-empty" id="nav-notifications-empty">No notifications</div>
+                    </div>
+                </li>
                 <li class="nav-item">
                     <a href="#cart" class="nav-link cart-icon" id="cart-icon">
                         <i class="fas fa-shopping-cart"></i>
@@ -170,9 +181,9 @@
                 <div class="footer-section">
                     <h4>Contact</h4>
                     <ul>
-                        <li><i class="fas fa-phone"></i> +1 234 567 8900</li>
+                        <li><i class="fas fa-phone"></i> +91 9822961688</li>
                         <li><i class="fas fa-envelope"></i> support@medify.com</li>
-                        <li><i class="fas fa-map-marker-alt"></i> 123 Medical Street, Health City</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Vivekanandnagar , Kopargaon , Maharashtra , India</li>
                     </ul>
                 </div>
             </div>
@@ -231,24 +242,56 @@
 
     <!-- Login Modal -->
     <div id="login-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
+        <div class="modal-content login-modal-content">
+            <span class="close" id="close-login-modal">&times;</span>
             <h2>Login to Your Account</h2>
-            <form class="login-form">
+            <form class="login-form" id="login-form">
+                <div class="form-group">
+                    <label>Login as</label>
+                    <select name="role" id="login-role" class="role-select">
+                        <option value="customer">Customer</option>
+                        <option value="doctor">Doctor</option>
+                        <option value="pharmacist">Pharmacist</option>
+                        <option value="delivery">Delivery Partner</option>
+                        <option value="clinic">Clinic</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>Email / Phone Number</label>
-                    <input type="text" placeholder="Enter your email or phone">
+                    <input type="text" name="emailOrPhone" id="login-email" placeholder="Enter your email or phone" required>
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" placeholder="Enter your password">
+                    <input type="password" name="password" id="login-password" placeholder="Enter your password" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">Login</button>
-                <p class="signup-link">Don't have an account? <a href="#">Sign Up</a></p>
+                <p class="signup-link">Don't have an account? <a href="signup.html">Sign Up</a></p>
             </form>
         </div>
     </div>
 
+    <!-- Payment modal (confirmed appointment) -->
+    <div class="payment-modal-overlay" id="payment-modal-overlay" aria-hidden="true">
+        <div class="payment-modal">
+            <div class="payment-modal-header">
+                <h2><i class="fas fa-credit-card"></i> Complete payment</h2>
+                <button type="button" class="payment-modal-close" id="payment-modal-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="payment-modal-body">
+                <p class="payment-modal-text">Your appointment has been confirmed. Pay the consultation fee to confirm your slot.</p>
+                <div class="payment-modal-amount-wrap">
+                    <span class="payment-modal-amount" id="payment-modal-amount">₹0</span>
+                </div>
+                <button type="button" class="btn btn-primary btn-block" id="payment-modal-pay-btn">Pay now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (compat for script-tag setup) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <script src="script-v2.js?v=2"></script>
 </body>
 

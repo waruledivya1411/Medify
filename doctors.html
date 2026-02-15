@@ -33,6 +33,17 @@
                 <li class="nav-item">
                     <a href="index.html#about" class="nav-link">About Us</a>
                 </li>
+                <li class="nav-item nav-item-notifications" id="nav-notifications-wrap" style="display: none;">
+                    <button type="button" class="nav-link nav-notifications-btn" id="nav-notifications-btn" aria-label="Notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="nav-notifications-badge" id="nav-notifications-badge">0</span>
+                    </button>
+                    <div class="nav-notifications-dropdown" id="nav-notifications-dropdown">
+                        <div class="nav-notifications-header">Notifications</div>
+                        <div class="nav-notifications-list" id="nav-notifications-list"></div>
+                        <div class="nav-notifications-empty" id="nav-notifications-empty">No notifications</div>
+                    </div>
+                </li>
                 <li class="nav-item">
                     <a href="#cart" class="nav-link cart-icon" id="cart-icon">
                         <i class="fas fa-shopping-cart"></i>
@@ -102,7 +113,10 @@
                             <input type="checkbox" class="filter-experience" value="11-16">
                             <span>11-16</span>
                         </label>
-                        <a href="#" class="show-more">+1 More</a>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="filter-experience" value="17+">
+                            <span>17+</span>
+                        </label>
                     </div>
 
                     <div class="filter-section">
@@ -192,9 +206,9 @@
                 <div class="footer-section">
                     <h4>Contact</h4>
                     <ul>
-                        <li><i class="fas fa-phone"></i> +1 234 567 8900</li>
+                        <li><i class="fas fa-phone"></i> +91 9822961688</li>
                         <li><i class="fas fa-envelope"></i> support@medify.com</li>
-                        <li><i class="fas fa-map-marker-alt"></i> 123 Medical Street, Health City</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Vivekanandnagar , Kopargaon , Maharashtra , India</li>
                     </ul>
                 </div>
             </div>
@@ -220,8 +234,30 @@
         </div>
     </div>
 
+    <!-- Payment modal (confirmed appointment) -->
+    <div class="payment-modal-overlay" id="payment-modal-overlay" aria-hidden="true">
+        <div class="payment-modal">
+            <div class="payment-modal-header">
+                <h2><i class="fas fa-credit-card"></i> Complete payment</h2>
+                <button type="button" class="payment-modal-close" id="payment-modal-close" aria-label="Close">&times;</button>
+            </div>
+            <div class="payment-modal-body">
+                <p class="payment-modal-text">Your appointment has been confirmed. Pay the consultation fee to confirm your slot.</p>
+                <div class="payment-modal-amount-wrap">
+                    <span class="payment-modal-amount" id="payment-modal-amount">₹0</span>
+                </div>
+                <button type="button" class="btn btn-primary btn-block" id="payment-modal-pay-btn">Pay now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <script src="script-v2.js?v=2"></script>
-    <script src="doctors.js?v=2"></script>
+    <script src="doctors.js?v=3"></script>
     <script>
         // Close booking modal handlers
         document.addEventListener('DOMContentLoaded', function () {

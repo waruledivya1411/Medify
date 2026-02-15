@@ -126,22 +126,129 @@ categoryTags.forEach(tag => {
     });
 });
 
-// Prescription File Upload
+// Prescription File Upload → Firebase Storage
+const PRESCRIPTION_MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const PRESCRIPTION_ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+
+function validatePrescriptionFile(file) {
+    if (!file) return { valid: false, error: 'No file selected.' };
+    if (!PRESCRIPTION_ALLOWED_TYPES.includes(file.type)) {
+        return { valid: false, error: 'Invalid format. Use JPG, PNG, or PDF only.' };
+    }
+    if (file.size > PRESCRIPTION_MAX_SIZE) {
+        return { valid: false, error: 'File too large. Maximum size is 5MB.' };
+    }
+    return { valid: true };
+}
+
+function setUploadBoxContent(html) {
+    const uploadBox = document.querySelector('.upload-box');
+    if (uploadBox) uploadBox.innerHTML = html;
+}
+
+function uploadPrescriptionToFirebase(file) {
+    const prescriptionFileInput = document.getElementById('prescription-file');
+    const validation = validatePrescriptionFile(file);
+    if (!validation.valid) {
+        alert(validation.error);
+        if (prescriptionFileInput) prescriptionFileInput.value = '';
+        return;
+    }
+
+    if (typeof firebase === 'undefined' || !window.firebaseStorage) {
+        alert('Storage is not available. Please refresh the page.');
+        return;
+    }
+
+    var auth = window.firebaseAuth;
+    var db = window.firebaseDb;
+    var user = auth ? auth.currentUser : null;
+    if (!user || !user.uid) {
+        alert('Please log in to upload a prescription. Our pharmacist will review it and prepare your order.');
+        if (prescriptionFileInput) prescriptionFileInput.value = '';
+        return;
+    }
+
+    setUploadBoxContent(`
+        <i class="fas fa-spinner fa-spin" style="color: var(--primary-teal); font-size: 4rem; margin-bottom: 1rem;"></i>
+        <h3>Uploading...</h3>
+        <p>${file.name}</p>
+    `);
+
+    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const path = `prescriptions/${user.uid}_${Date.now()}_${safeName}`;
+    const storageRef = window.firebaseStorage.ref(path);
+    const metadata = { contentType: file.type };
+
+    storageRef.put(file, metadata)
+        .then(function() {
+            return storageRef.getDownloadURL();
+        })
+        .then(function(fileUrl) {
+            if (!db) return;
+            return db.collection('prescriptions').add({
+                customerId: user.uid,
+                customerEmail: user.email || '',
+                customerName: user.displayName || null,
+                fileUrl: fileUrl,
+                fileName: file.name,
+                status: 'pending',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        })
+        .then(function() {
+            setUploadBoxContent(`
+                <i class="fas fa-check-circle" style="color: var(--primary-teal); font-size: 4rem; margin-bottom: 1rem;"></i>
+                <h3>Uploaded successfully</h3>
+                <p>Our pharmacist will review your prescription and prepare your order.</p>
+                <button class="btn btn-primary" onclick="document.getElementById('prescription-file').click()" style="margin-top: 1rem;">
+                    Upload another
+                </button>
+            `);
+            if (prescriptionFileInput) prescriptionFileInput.value = '';
+        })
+        .catch(function(err) {
+            console.error('Prescription upload failed:', err);
+            setUploadBoxContent(`
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Drag & Drop or Click to Upload</h3>
+                <p>Supported formats: JPG, PNG, PDF (Max 5MB)</p>
+                <button class="btn btn-primary" onclick="document.getElementById('prescription-file').click()">Choose File</button>
+                <p class="text-danger" style="margin-top: 0.5rem;">Upload failed. Please try again.</p>
+            `);
+            if (prescriptionFileInput) prescriptionFileInput.value = '';
+        });
+}
+
+function handlePrescriptionFile(file) {
+    if (!file || !file.type) return;
+    uploadPrescriptionToFirebase(file);
+}
+
 const prescriptionFileInput = document.getElementById('prescription-file');
 if (prescriptionFileInput) {
     prescriptionFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if (file) {
-            const uploadBox = document.querySelector('.upload-box');
-            uploadBox.innerHTML = `
-                <i class="fas fa-check-circle" style="color: var(--primary-teal); font-size: 4rem; margin-bottom: 1rem;"></i>
-                <h3>File Uploaded Successfully</h3>
-                <p>${file.name}</p>
-                <button class="btn btn-primary" onclick="document.getElementById('prescription-file').click()" style="margin-top: 1rem;">
-                    Change File
-                </button>
-            `;
-        }
+        handlePrescriptionFile(file);
+    });
+}
+
+// Drag & drop for prescription upload
+const uploadBox = document.querySelector('.prescription-upload-area .upload-box');
+if (uploadBox) {
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((ev) => {
+        uploadBox.addEventListener(ev, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+    uploadBox.addEventListener('drop', (e) => {
+        const file = e.dataTransfer.files[0];
+        handlePrescriptionFile(file);
+    });
+    uploadBox.addEventListener('click', (e) => {
+        if (e.target.closest('button') || e.target.closest('input')) return;
+        prescriptionFileInput && prescriptionFileInput.click();
     });
 }
 
@@ -187,6 +294,18 @@ function updateCartCount() {
     }
 }
 
+// Cart icon by product type – matches store (no tablet icon unless item is pills)
+function getCartItemIcon(imageType) {
+    const icons = {
+        'pills': 'fas fa-pills', 'bottle': 'fas fa-wine-bottle', 'baby': 'fas fa-baby',
+        'jar': 'fas fa-jar', 'device': 'fas fa-heartbeat', 'box': 'fas fa-box',
+        'tube': 'fas fa-toothpaste', 'pack': 'fas fa-archive', 'kit': 'fas fa-briefcase-medical',
+        'roll': 'fas fa-band-aid', 'bag': 'fas fa-shopping-bag', 'soap': 'fas fa-soap',
+        'capsules': 'fas fa-capsules'
+    };
+    return icons[imageType] || 'fas fa-cube';
+}
+
 // Update cart display
 function updateCartDisplay() {
     if (cart.length === 0) {
@@ -198,10 +317,12 @@ function updateCartDisplay() {
         `;
         cartFooter.style.display = 'none';
     } else {
-        cartItemsContainer.innerHTML = cart.map((item, index) => `
+        cartItemsContainer.innerHTML = cart.map((item, index) => {
+            const iconClass = getCartItemIcon(item.imageType);
+            return `
             <div class="cart-item">
                 <div class="cart-item-image">
-                    <i class="fas fa-pills"></i>
+                    <i class="${iconClass}"></i>
                 </div>
                 <div class="cart-item-details">
                     <h4>${item.name}</h4>
@@ -212,7 +333,8 @@ function updateCartDisplay() {
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-        `).join('');
+        `;
+        }).join('');
 
         const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         cartTotal.textContent = total;
@@ -227,10 +349,28 @@ window.removeFromCart = function (index) {
     updateCartCount();
 };
 
-// Add to Cart
+// Add to cart (called from medicines page with id, name, price, type, imageType)
+window.addToCart = function (item) {
+    const existing = cart.find(i => i.name === item.name);
+    if (existing) {
+        existing.quantity += 1;
+    } else {
+        cart.push({
+            name: item.name,
+            price: item.price,
+            quantity: 1,
+            imageType: item.imageType
+        });
+    }
+    updateCartCount();
+};
+
+// Add to Cart (button listener for product cards – skip if medicines page uses addProductToCart)
 const addToCartButtons = document.querySelectorAll('.add-to-cart');
 addToCartButtons.forEach(button => {
     button.addEventListener('click', function () {
+        const onclick = this.getAttribute('onclick') || '';
+        if (onclick.includes('addProductToCart')) return; // medicines page handles it with imageType
         const productCard = this.closest('.product-card');
         const productName = productCard.querySelector('h4').textContent;
         const productPrice = parseInt(productCard.querySelector('.price').textContent.replace('₹', ''));
@@ -243,7 +383,8 @@ addToCartButtons.forEach(button => {
             cart.push({
                 name: productName,
                 price: productPrice,
-                quantity: 1
+                quantity: 1,
+                imageType: 'cube'
             });
         }
 
@@ -517,10 +658,8 @@ window.attachBookingButtonListeners = attachBookingButtonListeners;
 window.createDoctorCard = function (doctor, department) {
     return `
         <div class="doctor-card" style="display: flex !important; visibility: visible !important; opacity: 1 !important; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; position: relative;">
-            <div class="on-time-badge" style="position: absolute; top: 15px; right: 15px; background: #1976d2; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; z-index: 1; pointer-events: none;">ON TIME GUARANTEE</div>
-            
             <div class="doctor-avatar" style="width: 100px; height: 100px; border-radius: 8px; background: #e0f2f1; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 20px; overflow: hidden;">
-                <img src="https://i.pravatar.cc/100?img=${doctor.id}" alt="${doctor.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas fa-user-md\\' style=\\'font-size: 3rem; color: #0097a7;\\'></i>';">
+                <i class="fas fa-user-md" style="font-size: 3rem; color: #0097a7;"></i>
             </div>
             
             <div class="doctor-details" style="flex: 1; display: flex; flex-direction: column;">
@@ -685,9 +824,8 @@ function showBookingModal(doctor, consultationType) {
         <div class="schedule-appointment-container">
             <!-- Doctor Info Section -->
             <div class="doctor-profile-section">
-                <div class="on-time-badge-modal">ON TIME GUARANTEE</div>
                 <div class="doctor-avatar-large">
-                    <img src="https://i.pravatar.cc/80?img=${doctor.id}" alt="${doctor.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\\'fas fa-user-md\\' style=\\'font-size: 2.5rem; color: #0097a7;\\'></i>';">
+                    <i class="fas fa-user-md" style="font-size: 2.5rem; color: #0097a7;"></i>
                 </div>
                 <div class="doctor-profile-info">
                     <h3 class="doctor-name-large">${doctor.name}</h3>
@@ -758,13 +896,14 @@ function showBookingModal(doctor, consultationType) {
                 <span class="price-amount">₹${doctor.price}</span>
             </div>
             <button type="button" class="btn-continue-booking" onclick="confirmScheduleBooking('${doctor.id}', '${consultationType}')">
-                Continue
+                Request appointment
             </button>
         `;
         modalContent.appendChild(footer);
     } else {
         footer.style.display = 'flex';
         footer.querySelector('.price-amount').textContent = `₹${doctor.price}`;
+        footer.querySelector('.btn-continue-booking').textContent = 'Request appointment';
         footer.querySelector('.btn-continue-booking').setAttribute('onclick', `confirmScheduleBooking('${doctor.id}', '${consultationType}')`);
     }
 
@@ -774,6 +913,9 @@ function showBookingModal(doctor, consultationType) {
     modal.style.opacity = '1';
     modal.style.zIndex = '2000';
     modal.style.position = 'fixed';
+
+    // Lock background scroll so only the modal scrolls
+    document.body.style.overflow = 'hidden';
 
     // Also ensure modal content is visible
     if (modalContent) {
@@ -819,43 +961,24 @@ function generateDateOptions() {
     return dates;
 }
 
-// Generate time slots
+// Generate time slots – 20 min each, 4 morning + 4 evening
 function generateTimeSlots() {
-    // Generate morning slots (08:00 AM to 11:50 AM - 24 slots)
-    const morningSlots = [];
-    for (let hour = 8; hour < 12; hour++) {
-        for (let minute = 0; minute < 60; minute += 10) {
-            const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-            const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-            const ampm = hour < 12 ? 'AM' : 'PM';
-            const time12 = `${hour12.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${ampm}`;
-            morningSlots.push({ label: time12, value: time24 });
-        }
+    function toSlot(hour, minute) {
+        const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        const ampm = hour < 12 ? 'AM' : 'PM';
+        const time12 = `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
+        return { label: time12, value: time24 };
     }
-
-    // Generate evening slots (05:00 PM to 07:50 PM - 12 slots)
-    const eveningSlots = [];
-    for (let hour = 17; hour < 20; hour++) {
-        for (let minute = 0; minute < 60; minute += 10) {
-            const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-            const hour12 = hour > 12 ? hour - 12 : hour;
-            const ampm = hour < 12 ? 'AM' : 'PM';
-            const time12 = `${hour12.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${ampm}`;
-            eveningSlots.push({ label: time12, value: time24 });
-        }
-    }
-
+    const morningSlots = [
+        toSlot(8, 0), toSlot(8, 20), toSlot(8, 40), toSlot(9, 0)
+    ];
+    const eveningSlots = [
+        toSlot(17, 0), toSlot(17, 20), toSlot(17, 40), toSlot(18, 0)
+    ];
     return [
-        {
-            title: 'Morning',
-            icon: 'fa-sun',
-            slots: morningSlots
-        },
-        {
-            title: 'Evening',
-            icon: 'fa-sun',
-            slots: eveningSlots
-        }
+        { title: 'Morning', icon: 'fa-sun', slots: morningSlots },
+        { title: 'Evening', icon: 'fa-moon', slots: eveningSlots }
     ];
 }
 
@@ -892,77 +1015,54 @@ function scrollDates(direction) {
     }
 }
 
-// Confirm schedule booking
+// Request appointment (replaces immediate booking)
 function confirmScheduleBooking(doctorId, consultationType) {
     if (!window.selectedDate || !window.selectedTime) {
-        alert('Please select a date and time slot');
+        alert('Please select a date and time slot.');
         return;
     }
 
-    // Get doctor info
     const department = window.currentDepartment || 'General Medicine';
     const doctor = window.doctorsDatabase[department]?.find(d => d.id == doctorId);
 
     if (!doctor) {
-        alert('Doctor information not found');
+        alert('Doctor information not found.');
         return;
     }
 
-    // Format date and time
     const selectedDate = new Date(window.selectedDate);
     const dateStr = selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     const timeStr = formatTime(window.selectedTime);
 
-    // Get modal elements
     const modalBody = document.getElementById('booking-body');
     const modalTitle = document.getElementById('booking-title');
 
     if (modalBody && modalTitle) {
-        modalTitle.textContent = 'Booking Confirmed';
-
-        let actionButtonHTML = '';
-        if (consultationType === 'online') {
-            actionButtonHTML = `
-                <button onclick="window.location.href='video-call.html?doctor=${encodeURIComponent(doctor.name)}'" class="btn-continue-booking" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; background-color: #28a745; color: white; border: none; font-size: 1rem; cursor: pointer;">
-                    <i class="fas fa-video" style="margin-right: 8px;"></i> Join Video Call
-                </button>
-            `;
-        } else {
-            actionButtonHTML = `
-                <button class="btn-continue-booking" onclick="closeBookingModal()">
-                    Close
-                </button>
-            `;
-        }
+        modalTitle.textContent = 'Request sent';
 
         modalBody.innerHTML = `
             <div style="text-align: center; padding: 30px 20px;">
                 <div style="width: 80px; height: 80px; background: #e0f2f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                    <i class="fas fa-check-circle" style="font-size: 3rem; color: #0097a7;"></i>
+                    <i class="fas fa-paper-plane" style="font-size: 3rem; color: #0097a7;"></i>
                 </div>
-                <h3 style="color: #333; margin-bottom: 15px;">Appointment Scheduled!</h3>
-                <p style="color: #666; margin-bottom: 25px; line-height: 1.6;">
-                    Your appointment with <strong>${doctor.name}</strong> has been confirmed.<br>
-                    <strong>Date:</strong> ${dateStr}<br>
-                    <strong>Time:</strong> ${timeStr}
+                <h3 style="color: #333; margin-bottom: 15px;">Request has been sent</h3>
+                <p style="color: #666; margin-bottom: 25px; line-height: 1.7; max-width: 320px; margin-left: auto; margin-right: auto;">
+                    You'll be notified once the doctor accepts it and the appointment will be scheduled.
                 </p>
-                ${actionButtonHTML}
-                <p style="color: #999; font-size: 0.9rem; margin-top: 20px;">A confirmation SMS has been sent to your registered number.</p>
+                <p style="color: #555; font-size: 0.95rem; margin-bottom: 25px;">
+                    <strong>${doctor.name}</strong><br>
+                    <span style="color: #888;">${dateStr} • ${timeStr}</span>
+                </p>
+                <button type="button" class="btn-continue-booking" onclick="closeBookingModal()">
+                    Close
+                </button>
             </div>
         `;
 
-        // Hide the footer if it exists as we included the button in the body
         const footer = document.querySelector('.booking-footer');
         if (footer) footer.style.display = 'none';
-
     } else {
-        // Fallback if modal elements not found
-        alert(`Appointment Scheduled!\n\nDoctor: ${doctor.name}\nDate: ${dateStr}\nTime: ${timeStr}\nFee: ₹${doctor.price}\n\nYou will receive a confirmation SMS shortly.`);
-        if (consultationType === 'online') {
-            if (confirm('Do you want to join the video call waiting room now?')) {
-                window.location.href = `video-call.html?doctor=${encodeURIComponent(doctor.name)}`;
-            }
-        }
+        alert("Request has been sent. You'll be notified once the doctor accepts it and the appointment will be scheduled.");
         closeBookingModal();
     }
 }
@@ -1112,13 +1212,17 @@ if (loginForm) {
     });
 }
 
-// Checkout button
+// Checkout button – save cart and go to checkout page
 const checkoutBtn = document.getElementById('checkout-btn');
 if (checkoutBtn) {
     checkoutBtn.addEventListener('click', () => {
         if (cart.length > 0) {
-            alert('Proceeding to checkout. This functionality will be integrated with payment gateway.');
-            // Here you would typically redirect to checkout page
+            try {
+                sessionStorage.setItem('medify_checkout_cart', JSON.stringify(cart));
+            } catch (e) {}
+            window.location.href = 'checkout.html';
+        } else {
+            alert('Your cart is empty. Add items to proceed.');
         }
     });
 }
